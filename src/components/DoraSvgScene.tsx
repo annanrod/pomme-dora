@@ -16,19 +16,21 @@ interface FallingApple {
   hitsHead: boolean;
 }
 
+const S = 'hsl(var(--foreground))'; // stroke color
+const SW = 1.2; // base stroke width
+
 const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSceneProps) => {
   const isBreak = sessionType !== 'focus';
   const [fallingApples, setFallingApples] = useState<FallingApple[]>([]);
   const [headBounce, setHeadBounce] = useState(false);
 
-  // Falling apples during focus
   useEffect(() => {
     if (!isRunning || isBreak) return;
     const interval = setInterval(() => {
       const hitsHead = Math.random() < 0.3;
       const newApple: FallingApple = {
         id: Date.now(),
-        x: hitsHead ? 200 : 140 + Math.random() * 120,
+        x: hitsHead ? 228 : 160 + Math.random() * 100,
         delay: 0,
         hitsHead,
       };
@@ -42,120 +44,108 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
   }, [isRunning, isBreak]);
 
   const treeScale = 0.7 + (treeLevel / 10) * 0.3;
-  const leafCount = Math.min(treeLevel * 2 + 3, 20);
+  const appleCount = Math.max(1, Math.floor(treeLevel / 2));
 
   return (
     <div className="relative w-full max-w-[400px] mx-auto aspect-square">
       <motion.svg
         viewBox="0 0 400 400"
         className="w-full h-full"
-        animate={{ filter: isBreak ? 'brightness(1.1) saturate(1.2)' : 'brightness(0.95) saturate(1)' }}
-        transition={{ duration: 1.5 }}
+        fill="none"
       >
-        {/* Sky */}
-        <motion.rect
-          x="0" y="0" width="400" height="280"
-          animate={{ fill: isBreak ? 'hsl(45, 70%, 80%)' : 'hsl(210, 30%, 75%)' }}
-          transition={{ duration: 1.5 }}
+        {/* Ground line */}
+        <motion.line
+          x1="0" y1="320" x2="400" y2="320"
+          stroke={S} strokeWidth={SW * 0.8}
+          animate={{ opacity: isBreak ? 0.3 : 0.2 }}
         />
 
-        {/* Sun/Moon */}
+        {/* Small ground details */}
+        {[30, 90, 300, 360].map((x, i) => (
+          <motion.path
+            key={`grass-${i}`}
+            d={`M${x} 320 Q${x + 4} 312 ${x + 8} 320`}
+            stroke={S}
+            strokeWidth={SW * 0.6}
+            opacity={0.3}
+            className="animate-leaf"
+            style={{ animationDelay: `${i * 0.8}s` }}
+          />
+        ))}
+
+        {/* Sun / Moon - fine circle */}
         <motion.circle
-          cx="320" cy="60" r="30"
-          animate={{
-            fill: isBreak ? 'hsl(45, 90%, 65%)' : 'hsl(45, 30%, 70%)',
-            r: isBreak ? 35 : 25,
-            opacity: isBreak ? 1 : 0.6,
-          }}
+          cx="330" cy="60" r="18"
+          stroke={S}
+          strokeWidth={SW * 0.7}
+          animate={{ opacity: isBreak ? 0.5 : 0.2 }}
           transition={{ duration: 1.5 }}
         />
         {isBreak && (
-          <motion.circle
-            cx="320" cy="60" r="45"
-            fill="hsl(45, 90%, 65%)"
-            className="animate-glow"
-            opacity={0.2}
-          />
+          <>
+            {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => {
+              const rad = (angle * Math.PI) / 180;
+              return (
+                <motion.line
+                  key={angle}
+                  x1={330 + Math.cos(rad) * 22} y1={60 + Math.sin(rad) * 22}
+                  x2={330 + Math.cos(rad) * 28} y2={60 + Math.sin(rad) * 28}
+                  stroke={S} strokeWidth={SW * 0.5} strokeLinecap="round"
+                  opacity={0.3}
+                />
+              );
+            })}
+          </>
         )}
 
-        {/* Clouds */}
-        <motion.g animate={{ x: [0, 10, 0] }} transition={{ duration: 20, repeat: Infinity }}>
-          <ellipse cx="80" cy="50" rx="40" ry="15" fill="hsl(0, 0%, 100%)" opacity="0.6" />
-          <ellipse cx="100" cy="45" rx="30" ry="12" fill="hsl(0, 0%, 100%)" opacity="0.5" />
+        {/* Cloud - simple arcs */}
+        <motion.g animate={{ x: [0, 8, 0] }} transition={{ duration: 25, repeat: Infinity }}>
+          <path d="M60 55 Q70 40 85 48 Q95 38 110 48 Q120 42 125 55" stroke={S} strokeWidth={SW * 0.5} opacity={0.2} strokeLinecap="round" />
         </motion.g>
-        <motion.g animate={{ x: [0, -8, 0] }} transition={{ duration: 25, repeat: Infinity }}>
-          <ellipse cx="250" cy="80" rx="35" ry="12" fill="hsl(0, 0%, 100%)" opacity="0.4" />
-        </motion.g>
-
-        {/* Ground */}
-        <motion.rect
-          x="0" y="280" width="400" height="120"
-          animate={{ fill: isBreak ? 'hsl(100, 35%, 55%)' : 'hsl(100, 25%, 45%)' }}
-          transition={{ duration: 1.5 }}
-        />
-        {/* Ground detail */}
-        <ellipse cx="200" cy="290" rx="200" ry="20" fill="hsl(100, 30%, 40%)" opacity="0.3" />
 
         {/* Tree */}
         <motion.g
           animate={{ scale: treeScale }}
-          style={{ transformOrigin: '200px 280px' }}
+          style={{ transformOrigin: '190px 320px' }}
           transition={{ duration: 0.5 }}
         >
           {/* Trunk */}
-          <rect x="188" y="180" width="24" height="100" rx="4" fill="hsl(25, 40%, 30%)" />
-          <rect x="185" y="270" width="30" height="15" rx="6" fill="hsl(25, 35%, 28%)" />
-          {/* Branch */}
-          <line x1="200" y1="220" x2="160" y2="200" stroke="hsl(25, 40%, 30%)" strokeWidth="6" strokeLinecap="round" />
-          <line x1="200" y1="210" x2="240" y2="190" stroke="hsl(25, 40%, 30%)" strokeWidth="5" strokeLinecap="round" />
+          <line x1="190" y1="200" x2="190" y2="320" stroke={S} strokeWidth={SW * 1.5} strokeLinecap="round" />
 
-          {/* Leaves canopy */}
-          <motion.g className="animate-sway" style={{ transformOrigin: '200px 160px' }}>
-            {Array.from({ length: leafCount }).map((_, i) => {
-              const angle = (i / leafCount) * Math.PI * 2;
-              const rx = 55 + Math.sin(i * 1.5) * 15;
-              const ry = 40 + Math.cos(i * 1.2) * 10;
-              const cx = 200 + Math.cos(angle) * 30;
-              const cy = 160 + Math.sin(angle) * 20;
-              return (
-                <motion.ellipse
-                  key={i}
-                  cx={cx} cy={cy} rx={rx / 2} ry={ry / 2}
-                  animate={{
-                    fill: isBreak ? 'hsl(100, 50%, 50%)' : 'hsl(130, 40%, 40%)',
-                  }}
-                  transition={{ duration: 1.5 }}
-                  opacity={0.8}
-                  className="animate-leaf"
-                  style={{ animationDelay: `${i * 0.3}s` }}
-                />
-              );
-            })}
-            {/* Main canopy */}
-            <motion.ellipse
-              cx="200" cy="160" rx="65" ry="50"
-              animate={{ fill: isBreak ? 'hsl(110, 45%, 48%)' : 'hsl(135, 38%, 38%)' }}
-              transition={{ duration: 1.5 }}
-            />
-            <motion.ellipse
-              cx="180" cy="150" rx="45" ry="35"
-              animate={{ fill: isBreak ? 'hsl(105, 50%, 52%)' : 'hsl(130, 40%, 42%)' }}
-              transition={{ duration: 1.5 }}
-            />
-            <motion.ellipse
-              cx="220" cy="145" rx="40" ry="32"
-              animate={{ fill: isBreak ? 'hsl(115, 48%, 50%)' : 'hsl(128, 42%, 40%)' }}
-              transition={{ duration: 1.5 }}
-            />
+          {/* Branches */}
+          <line x1="190" y1="240" x2="155" y2="215" stroke={S} strokeWidth={SW} strokeLinecap="round" />
+          <line x1="190" y1="225" x2="220" y2="200" stroke={S} strokeWidth={SW} strokeLinecap="round" />
+          <line x1="190" y1="260" x2="160" y2="245" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
+          <line x1="190" y1="255" x2="215" y2="238" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
 
-            {/* Apples on tree */}
+          {/* Canopy - delicate leaf outlines */}
+          <motion.g className="animate-sway" style={{ transformOrigin: '190px 180px' }}>
+            <ellipse cx="190" cy="175" rx="55" ry="42" stroke={S} strokeWidth={SW} opacity={0.35} />
+            <ellipse cx="170" cy="168" rx="35" ry="28" stroke={S} strokeWidth={SW * 0.7} opacity={0.25} />
+            <ellipse cx="210" cy="165" rx="30" ry="25" stroke={S} strokeWidth={SW * 0.7} opacity={0.25} />
+            <ellipse cx="190" cy="155" rx="25" ry="20" stroke={S} strokeWidth={SW * 0.6} opacity={0.2} />
+
+            {/* Individual leaves on branches */}
             {[
-              { cx: 165, cy: 155 },
-              { cx: 230, cy: 150 },
-              { cx: 195, cy: 135 },
-              { cx: 215, cy: 170 },
-            ].slice(0, Math.max(1, Math.floor(treeLevel / 2))).map((pos, i) => (
-              <circle key={`apple-${i}`} cx={pos.cx} cy={pos.cy} r="5" fill="hsl(0, 70%, 50%)" />
+              'M155 215 Q148 208 152 200',
+              'M150 218 Q142 215 145 208',
+              'M220 200 Q228 195 225 188',
+              'M218 203 Q225 200 222 193',
+              'M160 245 Q153 240 156 234',
+              'M215 238 Q222 234 219 228',
+            ].map((d, i) => (
+              <path key={`leaf-${i}`} d={d} stroke={S} strokeWidth={SW * 0.6} strokeLinecap="round" opacity={0.3} />
+            ))}
+
+            {/* Apples on tree - small circles */}
+            {[
+              { cx: 170, cy: 165 },
+              { cx: 210, cy: 162 },
+              { cx: 188, cy: 148 },
+              { cx: 200, cy: 178 },
+              { cx: 175, cy: 185 },
+            ].slice(0, appleCount).map((pos, i) => (
+              <circle key={`apple-${i}`} cx={pos.cx} cy={pos.cy} r="4" stroke={S} strokeWidth={SW * 0.8} opacity={0.5} />
             ))}
           </motion.g>
         </motion.g>
@@ -166,11 +156,12 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
             <motion.circle
               key={apple.id}
               cx={apple.x}
-              cy={170}
-              r="5"
-              fill="hsl(0, 70%, 50%)"
-              initial={{ y: 0, opacity: 1, rotate: 0 }}
-              animate={{ y: 110, opacity: 0, rotate: 45 }}
+              cy={180}
+              r="4"
+              stroke={S}
+              strokeWidth={SW * 0.8}
+              initial={{ y: 0, opacity: 0.6 }}
+              animate={{ y: 130, opacity: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 2, ease: "easeIn" }}
             />
@@ -182,11 +173,10 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
           animate={{ y: headBounce ? -3 : 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 10 }}
         >
-          {/* Body / Dress - seated sideways, leaning against trunk */}
-          <motion.path
-            d="M215 310 Q218 295 225 290 Q232 292 235 310 L237 330 Q225 335 213 330 Z"
-            animate={{ fill: isBreak ? 'hsl(340, 50%, 60%)' : 'hsl(340, 45%, 55%)' }}
-            transition={{ duration: 1 }}
+          {/* Body / torso */}
+          <path
+            d="M215 298 Q218 288 225 285 Q232 288 235 298 L237 318 Q225 322 213 318 Z"
+            stroke={S} strokeWidth={SW} strokeLinejoin="round"
           />
 
           {/* Arms */}
@@ -194,89 +184,78 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
             <>
               {/* Arm reaching for apple */}
               <motion.line
-                x1="218" y1="300" x2="205" y2="290"
-                stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round"
-                animate={{ x2: [205, 203, 205], y2: [290, 288, 290] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                x1="218" y1="294" x2="205" y2="284"
+                stroke={S} strokeWidth={SW} strokeLinecap="round"
+                animate={{ x2: [205, 202, 205], y2: [284, 282, 284] }}
+                transition={{ duration: 2.5, repeat: Infinity }}
               />
               {/* Apple in hand */}
               <motion.circle
-                cx="203" cy="288" r="5" fill="hsl(0, 70%, 50%)"
-                animate={{ cx: [203, 200, 203], cy: [288, 286, 288] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                cx="203" cy="282" r="4"
+                stroke={S} strokeWidth={SW * 0.8}
+                animate={{ cx: [203, 200, 203], cy: [282, 280, 282] }}
+                transition={{ duration: 2.5, repeat: Infinity }}
               />
-              <line x1="235" y1="305" x2="240" y2="315" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
+              <line x1="233" y1="296" x2="240" y2="308" stroke={S} strokeWidth={SW} strokeLinecap="round" />
             </>
           ) : (
             <>
-              {/* Resting arms - one on lap, one resting */}
-              <line x1="218" y1="302" x2="210" y2="318" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
-              <line x1="235" y1="305" x2="242" y2="320" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
+              <line x1="218" y1="294" x2="208" y2="310" stroke={S} strokeWidth={SW} strokeLinecap="round" />
+              <line x1="233" y1="296" x2="242" y2="310" stroke={S} strokeWidth={SW} strokeLinecap="round" />
             </>
           )}
 
-          {/* Legs - seated, extending forward */}
-          <line x1="218" y1="330" x2="205" y2="345" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
-          <line x1="228" y1="330" x2="215" y2="348" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
-          {/* Shoes */}
-          <ellipse cx="203" cy="347" rx="6" ry="3" fill="hsl(25, 50%, 25%)" />
-          <ellipse cx="213" cy="350" rx="6" ry="3" fill="hsl(25, 50%, 25%)" />
+          {/* Legs - seated */}
+          <line x1="218" y1="318" x2="205" y2="332" stroke={S} strokeWidth={SW} strokeLinecap="round" />
+          <line x1="228" y1="318" x2="215" y2="335" stroke={S} strokeWidth={SW} strokeLinecap="round" />
+          {/* Shoes - small marks */}
+          <line x1="202" y1="332" x2="198" y2="332" stroke={S} strokeWidth={SW * 1.2} strokeLinecap="round" />
+          <line x1="212" y1="335" x2="208" y2="335" stroke={S} strokeWidth={SW * 1.2} strokeLinecap="round" />
 
-          {/* Head - facing slightly left */}
-          <circle cx="225" cy="278" r="18" fill="hsl(30, 50%, 75%)" />
+          {/* Head */}
+          <circle cx="225" cy="272" r="14" stroke={S} strokeWidth={SW} />
 
-          {/* Hair */}
-          <path d="M207 273 Q210 258 225 255 Q240 258 243 273" fill="hsl(25, 50%, 25%)" />
-          <ellipse cx="208" cy="275" rx="3" ry="8" fill="hsl(25, 50%, 25%)" />
-          <ellipse cx="242" cy="275" rx="3" ry="8" fill="hsl(25, 50%, 25%)" />
+          {/* Hair - simple strokes */}
+          <path d="M211 268 Q215 255 225 253 Q235 255 239 268" stroke={S} strokeWidth={SW} strokeLinecap="round" />
+          <line x1="211" y1="268" x2="211" y2="278" stroke={S} strokeWidth={SW * 0.7} strokeLinecap="round" />
+          <line x1="239" y1="268" x2="239" y2="278" stroke={S} strokeWidth={SW * 0.7} strokeLinecap="round" />
+          {/* Hair detail */}
+          <path d="M215 256 Q218 250 222 254" stroke={S} strokeWidth={SW * 0.5} strokeLinecap="round" opacity={0.4} />
 
           {/* Face */}
           {isBreak ? (
             <>
-              {/* Happy eyes */}
-              <path d="M218 277 Q220 274 222 277" stroke="hsl(25, 40%, 20%)" strokeWidth="1.5" fill="none" />
-              <path d="M228 277 Q230 274 232 277" stroke="hsl(25, 40%, 20%)" strokeWidth="1.5" fill="none" />
-              {/* Happy mouth */}
+              {/* Happy eyes - arcs */}
+              <path d="M219 271 Q221 268 223 271" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
+              <path d="M227 271 Q229 268 231 271" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
+              {/* Smile */}
               <motion.path
-                d="M220 285 Q225 291 231 285"
-                stroke="hsl(0, 60%, 50%)" strokeWidth="1.5" fill="none"
+                d="M221 278 Q225 283 229 278"
+                stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round"
                 className="animate-munch"
               />
-              {/* Blush */}
-              <circle cx="216" cy="283" r="3" fill="hsl(0, 50%, 75%)" opacity="0.5" />
-              <circle cx="234" cy="283" r="3" fill="hsl(0, 50%, 75%)" opacity="0.5" />
+              {/* Blush - tiny dots */}
+              <circle cx="218" cy="276" r="1.5" stroke={S} strokeWidth={SW * 0.3} opacity={0.2} />
+              <circle cx="232" cy="276" r="1.5" stroke={S} strokeWidth={SW * 0.3} opacity={0.2} />
             </>
           ) : (
             <>
-              {/* Focused eyes */}
-              <motion.g className="animate-blink" style={{ transformOrigin: '225px 277px' }}>
-                <circle cx="219" cy="277" r="2" fill="hsl(25, 40%, 20%)" />
-                <circle cx="231" cy="277" r="2" fill="hsl(25, 40%, 20%)" />
+              {/* Focused eyes - dots */}
+              <motion.g className="animate-blink" style={{ transformOrigin: '225px 271px' }}>
+                <circle cx="220" cy="271" r="1.2" fill={S} />
+                <circle cx="230" cy="271" r="1.2" fill={S} />
               </motion.g>
               {/* Neutral mouth */}
-              <line x1="222" y1="285" x2="229" y2="285" stroke="hsl(0, 40%, 45%)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="223" y1="278" x2="228" y2="278" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
             </>
           )}
         </motion.g>
 
-        {/* Grass tufts */}
-        {[50, 120, 280, 340, 30, 370].map((x, i) => (
-          <motion.path
-            key={i}
-            d={`M${x} 290 Q${x + 3} 280 ${x + 6} 290`}
-            stroke="hsl(120, 30%, 35%)"
-            strokeWidth="2"
-            fill="none"
-            className="animate-leaf"
-            style={{ animationDelay: `${i * 0.5}s` }}
-          />
-        ))}
-
-        {/* Small flowers */}
-        {[70, 310, 350].map((x, i) => (
-          <g key={`flower-${i}`}>
-            <circle cx={x} cy={295} r="3" fill={`hsl(${[45, 320, 280][i]}, 60%, 70%)`} />
-            <circle cx={x} cy={295} r="1.5" fill="hsl(45, 80%, 60%)" />
+        {/* Small flowers - minimal */}
+        {[80, 310, 350].map((x, i) => (
+          <g key={`flower-${i}`} opacity={0.25}>
+            <line x1={x} y1={320} x2={x} y2={312} stroke={S} strokeWidth={SW * 0.5} />
+            <circle cx={x} cy={310} r="2.5" stroke={S} strokeWidth={SW * 0.5} />
           </g>
         ))}
       </motion.svg>
