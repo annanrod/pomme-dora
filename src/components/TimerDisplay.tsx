@@ -24,10 +24,9 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
     <div className="flex flex-col items-center gap-4">
       <motion.div
         className="text-sm font-semibold font-display tracking-wider uppercase"
-        animate={{ color: isBreak ? 'hsl(145, 30%, 42%)' : 'hsl(5, 55%, 55%)' }}
         key={sessionType}
         initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
+        animate={{ opacity: 1, y: 0, color: isBreak ? 'hsl(145, 30%, 42%)' : 'hsl(5, 55%, 55%)' }}
         transition={{ duration: 0.4 }}
       >
         {SESSION_LABELS[sessionType]}

@@ -251,7 +251,7 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
           <path d="M220 308 Q214 318 208 326" stroke="#F0C8A8" strokeWidth="4" fill="none" strokeLinecap="round" />
           <path d="M230 308 Q224 320 218 328" stroke="#F0C8A8" strokeWidth="4" fill="none" strokeLinecap="round" />
           {/* Shoes */}
-          <ellipse cx="206" cy="328" rx="6" ry="3.5" fill="#8B7355" rx="6" />
+          <ellipse cx="206" cy="328" rx="6" ry="3.5" fill="#8B7355" />
           <ellipse cx="216" cy="330" rx="6" ry="3.5" fill="#8B7355" />
 
           {/* Head */}
