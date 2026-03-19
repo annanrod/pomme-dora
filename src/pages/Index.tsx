@@ -32,7 +32,6 @@ const Index = () => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Rotate motivational messages
   useEffect(() => {
     const interval = setInterval(() => {
       setMessageIndex(prev => (prev + 1) % MOTIVATIONAL.length);
@@ -45,7 +44,7 @@ const Index = () => {
       {/* Header */}
       <header className="w-full max-w-md flex items-center justify-between">
         <StatsPanel stats={stats} />
-        <h1 className="font-display text-xl font-bold text-foreground">
+        <h1 className="font-display text-lg font-bold text-foreground tracking-wide">
           Pomme & Dora
         </h1>
         <SettingsPanel
@@ -56,12 +55,12 @@ const Index = () => {
         />
       </header>
 
-      {/* Scene */}
+      {/* Main content */}
       <motion.div
-        className="w-full max-w-md flex-1 flex flex-col items-center justify-center gap-4"
-        initial={{ opacity: 0, y: 20 }}
+        className="w-full max-w-md flex-1 flex flex-col items-center justify-center gap-2"
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.5 }}
       >
         <DoraSvgScene
           sessionType={sessionType}
@@ -77,24 +76,26 @@ const Index = () => {
           sessionsCompleted={sessionsCompleted}
         />
 
-        <TimerControls
-          isRunning={isRunning}
-          onStart={start}
-          onPause={pause}
-          onReset={reset}
-          onSkip={skip}
-        />
+        <div className="mt-2">
+          <TimerControls
+            isRunning={isRunning}
+            onStart={start}
+            onPause={pause}
+            onReset={reset}
+            onSkip={skip}
+          />
+        </div>
       </motion.div>
 
-      {/* Motivational Message */}
+      {/* Footer message */}
       <footer className="w-full max-w-md text-center pb-2">
         <AnimatePresence mode="wait">
           <motion.p
             key={messageIndex}
-            className="text-xs text-muted-foreground font-body"
-            initial={{ opacity: 0, y: 5 }}
+            className="text-xs text-muted-foreground font-body font-medium"
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
+            exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.4 }}
           >
             {MOTIVATIONAL[messageIndex]}
