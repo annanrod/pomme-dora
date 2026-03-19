@@ -177,14 +177,14 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
           ))}
         </AnimatePresence>
 
-        {/* Dora */}
+        {/* Dora - sitting sideways at the foot of the tree */}
         <motion.g
           animate={{ y: headBounce ? -3 : 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 10 }}
         >
-          {/* Body / Dress */}
+          {/* Body / Dress - seated sideways, leaning against trunk */}
           <motion.path
-            d="M185 310 Q185 290 200 288 Q215 290 215 310 L220 340 Q200 345 180 340 Z"
+            d="M215 310 Q218 295 225 290 Q232 292 235 310 L237 330 Q225 335 213 330 Z"
             animate={{ fill: isBreak ? 'hsl(340, 50%, 60%)' : 'hsl(340, 45%, 55%)' }}
             transition={{ duration: 1 }}
           />
@@ -194,67 +194,67 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
             <>
               {/* Arm reaching for apple */}
               <motion.line
-                x1="185" y1="300" x2="170" y2="285"
+                x1="218" y1="300" x2="205" y2="290"
                 stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round"
-                animate={{ x2: [170, 168, 170], y2: [285, 283, 285] }}
+                animate={{ x2: [205, 203, 205], y2: [290, 288, 290] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
               {/* Apple in hand */}
               <motion.circle
-                cx="168" cy="283" r="5" fill="hsl(0, 70%, 50%)"
-                animate={{ cx: [168, 175, 168], cy: [283, 280, 283] }}
+                cx="203" cy="288" r="5" fill="hsl(0, 70%, 50%)"
+                animate={{ cx: [203, 200, 203], cy: [288, 286, 288] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
-              <line x1="215" y1="300" x2="225" y2="315" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
+              <line x1="235" y1="305" x2="240" y2="315" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
             </>
           ) : (
             <>
-              {/* Resting arms */}
-              <line x1="185" y1="300" x2="175" y2="320" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
-              <line x1="215" y1="300" x2="225" y2="320" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
+              {/* Resting arms - one on lap, one resting */}
+              <line x1="218" y1="302" x2="210" y2="318" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
+              <line x1="235" y1="305" x2="242" y2="320" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
             </>
           )}
 
-          {/* Legs */}
-          <line x1="190" y1="340" x2="185" y2="360" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
-          <line x1="210" y1="340" x2="215" y2="360" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
+          {/* Legs - seated, extending forward */}
+          <line x1="218" y1="330" x2="205" y2="345" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
+          <line x1="228" y1="330" x2="215" y2="348" stroke="hsl(30, 50%, 75%)" strokeWidth="4" strokeLinecap="round" />
           {/* Shoes */}
-          <ellipse cx="183" cy="362" rx="6" ry="3" fill="hsl(25, 50%, 25%)" />
-          <ellipse cx="217" cy="362" rx="6" ry="3" fill="hsl(25, 50%, 25%)" />
+          <ellipse cx="203" cy="347" rx="6" ry="3" fill="hsl(25, 50%, 25%)" />
+          <ellipse cx="213" cy="350" rx="6" ry="3" fill="hsl(25, 50%, 25%)" />
 
-          {/* Head */}
-          <circle cx="200" cy="275" r="18" fill="hsl(30, 50%, 75%)" />
+          {/* Head - facing slightly left */}
+          <circle cx="225" cy="278" r="18" fill="hsl(30, 50%, 75%)" />
 
           {/* Hair */}
-          <path d="M182 270 Q182 255 200 252 Q218 255 218 270" fill="hsl(25, 50%, 25%)" />
-          <ellipse cx="182" cy="272" rx="3" ry="8" fill="hsl(25, 50%, 25%)" />
-          <ellipse cx="218" cy="272" rx="3" ry="8" fill="hsl(25, 50%, 25%)" />
+          <path d="M207 273 Q210 258 225 255 Q240 258 243 273" fill="hsl(25, 50%, 25%)" />
+          <ellipse cx="208" cy="275" rx="3" ry="8" fill="hsl(25, 50%, 25%)" />
+          <ellipse cx="242" cy="275" rx="3" ry="8" fill="hsl(25, 50%, 25%)" />
 
           {/* Face */}
           {isBreak ? (
             <>
               {/* Happy eyes */}
-              <path d="M193 274 Q195 271 197 274" stroke="hsl(25, 40%, 20%)" strokeWidth="1.5" fill="none" />
-              <path d="M203 274 Q205 271 207 274" stroke="hsl(25, 40%, 20%)" strokeWidth="1.5" fill="none" />
+              <path d="M218 277 Q220 274 222 277" stroke="hsl(25, 40%, 20%)" strokeWidth="1.5" fill="none" />
+              <path d="M228 277 Q230 274 232 277" stroke="hsl(25, 40%, 20%)" strokeWidth="1.5" fill="none" />
               {/* Happy mouth */}
               <motion.path
-                d="M194 282 Q200 288 206 282"
+                d="M220 285 Q225 291 231 285"
                 stroke="hsl(0, 60%, 50%)" strokeWidth="1.5" fill="none"
                 className="animate-munch"
               />
               {/* Blush */}
-              <circle cx="190" cy="280" r="3" fill="hsl(0, 50%, 75%)" opacity="0.5" />
-              <circle cx="210" cy="280" r="3" fill="hsl(0, 50%, 75%)" opacity="0.5" />
+              <circle cx="216" cy="283" r="3" fill="hsl(0, 50%, 75%)" opacity="0.5" />
+              <circle cx="234" cy="283" r="3" fill="hsl(0, 50%, 75%)" opacity="0.5" />
             </>
           ) : (
             <>
               {/* Focused eyes */}
-              <motion.g className="animate-blink" style={{ transformOrigin: '200px 274px' }}>
-                <circle cx="194" cy="274" r="2" fill="hsl(25, 40%, 20%)" />
-                <circle cx="206" cy="274" r="2" fill="hsl(25, 40%, 20%)" />
+              <motion.g className="animate-blink" style={{ transformOrigin: '225px 277px' }}>
+                <circle cx="219" cy="277" r="2" fill="hsl(25, 40%, 20%)" />
+                <circle cx="231" cy="277" r="2" fill="hsl(25, 40%, 20%)" />
               </motion.g>
               {/* Neutral mouth */}
-              <line x1="196" y1="282" x2="204" y2="282" stroke="hsl(0, 40%, 45%)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="222" y1="285" x2="229" y2="285" stroke="hsl(0, 40%, 45%)" strokeWidth="1.5" strokeLinecap="round" />
             </>
           )}
         </motion.g>
