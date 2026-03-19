@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         display: ['Fredoka', 'sans-serif'],
-        body: ['Quicksand', 'sans-serif'],
+        body: ['Nunito', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

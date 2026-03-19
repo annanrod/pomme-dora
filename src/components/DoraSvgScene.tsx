@@ -12,12 +12,8 @@ interface DoraSvgSceneProps {
 interface FallingApple {
   id: number;
   x: number;
-  delay: number;
   hitsHead: boolean;
 }
-
-const S = 'hsl(var(--foreground))'; // stroke color
-const SW = 1.2; // base stroke width
 
 const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSceneProps) => {
   const isBreak = sessionType !== 'focus';
@@ -27,125 +23,166 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
   useEffect(() => {
     if (!isRunning || isBreak) return;
     const interval = setInterval(() => {
-      const hitsHead = Math.random() < 0.3;
+      const hitsHead = Math.random() < 0.35;
       const newApple: FallingApple = {
         id: Date.now(),
-        x: hitsHead ? 228 : 160 + Math.random() * 100,
-        delay: 0,
+        x: hitsHead ? 230 : 155 + Math.random() * 90,
         hitsHead,
       };
-      setFallingApples(prev => [...prev.slice(-4), newApple]);
+      setFallingApples(prev => [...prev.slice(-3), newApple]);
       if (hitsHead) {
-        setTimeout(() => setHeadBounce(true), 1800);
-        setTimeout(() => setHeadBounce(false), 2200);
+        setTimeout(() => setHeadBounce(true), 1600);
+        setTimeout(() => setHeadBounce(false), 2000);
       }
-    }, 5000 + Math.random() * 3000);
+    }, 4500 + Math.random() * 3000);
     return () => clearInterval(interval);
   }, [isRunning, isBreak]);
 
-  const treeScale = 0.7 + (treeLevel / 10) * 0.3;
+  const treeScale = 0.75 + (treeLevel / 10) * 0.25;
   const appleCount = Math.max(1, Math.floor(treeLevel / 2));
 
   return (
-    <div className="relative w-full max-w-[400px] mx-auto aspect-square">
+    <div className="relative w-full max-w-[380px] mx-auto" style={{ aspectRatio: '1/0.85' }}>
       <motion.svg
-        viewBox="0 0 400 400"
+        viewBox="0 0 400 340"
         className="w-full h-full"
-        fill="none"
+        style={{ overflow: 'visible' }}
       >
-        {/* Ground line */}
-        <motion.line
-          x1="0" y1="320" x2="400" y2="320"
-          stroke={S} strokeWidth={SW * 0.8}
-          animate={{ opacity: isBreak ? 0.3 : 0.2 }}
-        />
+        <defs>
+          {/* Soft gradients */}
+          <linearGradient id="skyGradFocus" x1="0" y1="0" x2="0" y2="1">
+            <motion.stop offset="0%" animate={{ stopColor: isBreak ? '#FFF5E6' : '#E8EDF5' }} transition={{ duration: 1.5 }} />
+            <motion.stop offset="100%" animate={{ stopColor: isBreak ? '#FFECD2' : '#DDE4EF' }} transition={{ duration: 1.5 }} />
+          </linearGradient>
+          <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+            <motion.stop offset="0%" animate={{ stopColor: isBreak ? '#C8E6A0' : '#B0CFA0' }} transition={{ duration: 1.5 }} />
+            <motion.stop offset="100%" animate={{ stopColor: isBreak ? '#A8D080' : '#96B888' }} transition={{ duration: 1.5 }} />
+          </linearGradient>
+          <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FFE4A0" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#FFE4A0" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="trunkGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#8B7355" />
+            <stop offset="50%" stopColor="#A0896A" />
+            <stop offset="100%" stopColor="#7A6548" />
+          </linearGradient>
+          <radialGradient id="canopyGrad" cx="45%" cy="40%" r="55%">
+            <motion.stop offset="0%" animate={{ stopColor: isBreak ? '#8BC370' : '#6DAA6E' }} transition={{ duration: 1.5 }} />
+            <motion.stop offset="60%" animate={{ stopColor: isBreak ? '#6AAF55' : '#5A9560' }} transition={{ duration: 1.5 }} />
+            <motion.stop offset="100%" animate={{ stopColor: isBreak ? '#4E9B3E' : '#4A8050' }} transition={{ duration: 1.5 }} />
+          </radialGradient>
+          <radialGradient id="canopyHighlight" cx="35%" cy="30%" r="40%">
+            <stop offset="0%" stopColor="#fff" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="appleGrad" cx="35%" cy="30%" r="55%">
+            <stop offset="0%" stopColor="#F06050" />
+            <stop offset="100%" stopColor="#D44030" />
+          </radialGradient>
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+            <feOffset dx="1" dy="2" />
+            <feComponentTransfer><feFuncA type="linear" slope="0.12" /></feComponentTransfer>
+            <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
 
-        {/* Small ground details */}
-        {[30, 90, 300, 360].map((x, i) => (
-          <motion.path
-            key={`grass-${i}`}
-            d={`M${x} 320 Q${x + 4} 312 ${x + 8} 320`}
-            stroke={S}
-            strokeWidth={SW * 0.6}
-            opacity={0.3}
-            className="animate-leaf"
-            style={{ animationDelay: `${i * 0.8}s` }}
-          />
+        {/* Sky */}
+        <rect x="0" y="0" width="400" height="260" fill="url(#skyGradFocus)" />
+
+        {/* Sun */}
+        <motion.g animate={{ opacity: isBreak ? 1 : 0.5 }} transition={{ duration: 1.5 }}>
+          <circle cx="330" cy="55" r="45" fill="url(#sunGlow)" />
+          <motion.circle cx="330" cy="55" animate={{ r: isBreak ? 18 : 14 }} fill="#FFD580" transition={{ duration: 1.5 }} />
+          {isBreak && (
+            <motion.circle cx="330" cy="55" r="22" fill="none" stroke="#FFD580" strokeWidth="1" opacity={0.3}
+              animate={{ r: [22, 26, 22], opacity: [0.3, 0.15, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+          )}
+        </motion.g>
+
+        {/* Clouds */}
+        <motion.g animate={{ x: [0, 12, 0] }} transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}>
+          <g opacity="0.5">
+            <ellipse cx="75" cy="50" rx="28" ry="10" fill="white" />
+            <ellipse cx="95" cy="46" rx="22" ry="9" fill="white" />
+            <ellipse cx="60" cy="48" rx="18" ry="8" fill="white" />
+          </g>
+        </motion.g>
+        <motion.g animate={{ x: [0, -10, 0] }} transition={{ duration: 35, repeat: Infinity, ease: "easeInOut" }}>
+          <g opacity="0.35">
+            <ellipse cx="260" cy="72" rx="24" ry="8" fill="white" />
+            <ellipse cx="278" cy="69" rx="18" ry="7" fill="white" />
+          </g>
+        </motion.g>
+
+        {/* Ground */}
+        <ellipse cx="200" cy="268" rx="220" ry="30" fill="url(#groundGrad)" />
+        <rect x="0" y="268" width="400" height="80" fill="url(#groundGrad)" />
+
+        {/* Ground grass details */}
+        {[30, 70, 115, 280, 320, 365].map((x, i) => (
+          <motion.g key={`grass-${i}`} className="animate-leaf" style={{ animationDelay: `${i * 0.7}s` }}>
+            <path d={`M${x} 268 Q${x - 2} 258 ${x + 3} 255`} stroke="#6A9A58" strokeWidth="1.5" fill="none" opacity="0.4" strokeLinecap="round" />
+            <path d={`M${x + 5} 268 Q${x + 8} 260 ${x + 4} 256`} stroke="#6A9A58" strokeWidth="1.2" fill="none" opacity="0.3" strokeLinecap="round" />
+          </motion.g>
         ))}
 
-        {/* Sun / Moon - fine circle */}
-        <motion.circle
-          cx="330" cy="60" r="18"
-          stroke={S}
-          strokeWidth={SW * 0.7}
-          animate={{ opacity: isBreak ? 0.5 : 0.2 }}
-          transition={{ duration: 1.5 }}
-        />
-        {isBreak && (
-          <>
-            {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => {
-              const rad = (angle * Math.PI) / 180;
-              return (
-                <motion.line
-                  key={angle}
-                  x1={330 + Math.cos(rad) * 22} y1={60 + Math.sin(rad) * 22}
-                  x2={330 + Math.cos(rad) * 28} y2={60 + Math.sin(rad) * 28}
-                  stroke={S} strokeWidth={SW * 0.5} strokeLinecap="round"
-                  opacity={0.3}
-                />
-              );
-            })}
-          </>
-        )}
-
-        {/* Cloud - simple arcs */}
-        <motion.g animate={{ x: [0, 8, 0] }} transition={{ duration: 25, repeat: Infinity }}>
-          <path d="M60 55 Q70 40 85 48 Q95 38 110 48 Q120 42 125 55" stroke={S} strokeWidth={SW * 0.5} opacity={0.2} strokeLinecap="round" />
-        </motion.g>
+        {/* Small flowers */}
+        {[{ x: 55, c: '#F2A0B0' }, { x: 310, c: '#E8C870' }, { x: 355, c: '#B8A0D8' }].map((f, i) => (
+          <g key={`flower-${i}`}>
+            <line x1={f.x} y1={268} x2={f.x} y2={258} stroke="#6A9A58" strokeWidth="1.2" />
+            <circle cx={f.x} cy={256} r="3" fill={f.c} opacity="0.6" />
+            <circle cx={f.x} cy={256} r="1.5" fill="#FFE8A0" opacity="0.8" />
+          </g>
+        ))}
 
         {/* Tree */}
         <motion.g
           animate={{ scale: treeScale }}
-          style={{ transformOrigin: '190px 320px' }}
-          transition={{ duration: 0.5 }}
+          style={{ transformOrigin: '190px 268px' }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          filter="url(#softShadow)"
         >
           {/* Trunk */}
-          <line x1="190" y1="200" x2="190" y2="320" stroke={S} strokeWidth={SW * 1.5} strokeLinecap="round" />
+          <path d="M183 200 L180 268 L200 270 L197 200" fill="url(#trunkGrad)" />
+          <path d="M178 265 Q190 275 202 265" fill="#7A6548" opacity="0.4" />
 
           {/* Branches */}
-          <line x1="190" y1="240" x2="155" y2="215" stroke={S} strokeWidth={SW} strokeLinecap="round" />
-          <line x1="190" y1="225" x2="220" y2="200" stroke={S} strokeWidth={SW} strokeLinecap="round" />
-          <line x1="190" y1="260" x2="160" y2="245" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
-          <line x1="190" y1="255" x2="215" y2="238" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
+          <path d="M190 230 Q172 218 155 212" stroke="#8B7355" strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d="M190 218 Q210 206 225 198" stroke="#8B7355" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+          <path d="M190 245 Q175 238 162 235" stroke="#8B7355" strokeWidth="3" fill="none" strokeLinecap="round" />
 
-          {/* Canopy - delicate leaf outlines */}
-          <motion.g className="animate-sway" style={{ transformOrigin: '190px 180px' }}>
-            <ellipse cx="190" cy="175" rx="55" ry="42" stroke={S} strokeWidth={SW} opacity={0.35} />
-            <ellipse cx="170" cy="168" rx="35" ry="28" stroke={S} strokeWidth={SW * 0.7} opacity={0.25} />
-            <ellipse cx="210" cy="165" rx="30" ry="25" stroke={S} strokeWidth={SW * 0.7} opacity={0.25} />
-            <ellipse cx="190" cy="155" rx="25" ry="20" stroke={S} strokeWidth={SW * 0.6} opacity={0.2} />
+          {/* Canopy */}
+          <motion.g className="animate-sway" style={{ transformOrigin: '190px 170px' }}>
+            {/* Main foliage mass */}
+            <ellipse cx="190" cy="168" rx="62" ry="50" fill="url(#canopyGrad)" />
+            <ellipse cx="165" cy="160" rx="38" ry="32" fill="url(#canopyGrad)" opacity="0.8" />
+            <ellipse cx="215" cy="155" rx="35" ry="30" fill="url(#canopyGrad)" opacity="0.8" />
+            <ellipse cx="190" cy="148" rx="30" ry="25" fill="url(#canopyGrad)" opacity="0.7" />
+            
+            {/* Highlight */}
+            <ellipse cx="175" cy="155" rx="30" ry="22" fill="url(#canopyHighlight)" />
 
-            {/* Individual leaves on branches */}
+            {/* Leaf texture - subtle darker patches */}
+            <ellipse cx="205" cy="175" rx="18" ry="14" fill="#4A8050" opacity="0.25" />
+            <ellipse cx="170" cy="175" rx="15" ry="12" fill="#4A8050" opacity="0.2" />
+
+            {/* Apples on tree */}
             {[
-              'M155 215 Q148 208 152 200',
-              'M150 218 Q142 215 145 208',
-              'M220 200 Q228 195 225 188',
-              'M218 203 Q225 200 222 193',
-              'M160 245 Q153 240 156 234',
-              'M215 238 Q222 234 219 228',
-            ].map((d, i) => (
-              <path key={`leaf-${i}`} d={d} stroke={S} strokeWidth={SW * 0.6} strokeLinecap="round" opacity={0.3} />
-            ))}
-
-            {/* Apples on tree - small circles */}
-            {[
-              { cx: 170, cy: 165 },
-              { cx: 210, cy: 162 },
-              { cx: 188, cy: 148 },
-              { cx: 200, cy: 178 },
-              { cx: 175, cy: 185 },
+              { cx: 168, cy: 162 },
+              { cx: 212, cy: 158 },
+              { cx: 188, cy: 143 },
+              { cx: 202, cy: 176 },
+              { cx: 175, cy: 180 },
             ].slice(0, appleCount).map((pos, i) => (
-              <circle key={`apple-${i}`} cx={pos.cx} cy={pos.cy} r="4" stroke={S} strokeWidth={SW * 0.8} opacity={0.5} />
+              <g key={`apple-${i}`}>
+                <circle cx={pos.cx} cy={pos.cy} r="5.5" fill="url(#appleGrad)" />
+                <path d={`M${pos.cx} ${pos.cy - 5} Q${pos.cx + 2} ${pos.cy - 8} ${pos.cx + 4} ${pos.cy - 7}`} stroke="#5A8040" strokeWidth="1" fill="none" />
+                <ellipse cx={pos.cx - 1.5} cy={pos.cy - 1.5} rx="1.5" ry="1" fill="white" opacity="0.3" />
+              </g>
             ))}
           </motion.g>
         </motion.g>
@@ -153,111 +190,113 @@ const DoraSvgScene = ({ sessionType, isRunning, treeLevel, progress }: DoraSvgSc
         {/* Falling Apples */}
         <AnimatePresence>
           {fallingApples.map(apple => (
-            <motion.circle
+            <motion.g
               key={apple.id}
-              cx={apple.x}
-              cy={180}
-              r="4"
-              stroke={S}
-              strokeWidth={SW * 0.8}
-              initial={{ y: 0, opacity: 0.6 }}
-              animate={{ y: 130, opacity: 0 }}
+              initial={{ y: 0, opacity: 1, rotate: 0 }}
+              animate={{ y: apple.hitsHead ? 95 : 110, opacity: [1, 1, 0], rotate: 30 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 2, ease: "easeIn" }}
-            />
+              transition={{ duration: 1.8, ease: "easeIn" }}
+            >
+              <circle cx={apple.x} cy={175} r="5" fill="url(#appleGrad)" />
+              <ellipse cx={apple.x - 1.5} cy={173.5} rx="1.5" ry="1" fill="white" opacity="0.3" />
+            </motion.g>
           ))}
         </AnimatePresence>
 
         {/* Dora - sitting sideways at the foot of the tree */}
         <motion.g
-          animate={{ y: headBounce ? -3 : 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 10 }}
+          animate={{ y: headBounce ? -4 : 0 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 12 }}
+          filter="url(#softShadow)"
         >
-          {/* Body / torso */}
-          <path
-            d="M215 298 Q218 288 225 285 Q232 288 235 298 L237 318 Q225 322 213 318 Z"
-            stroke={S} strokeWidth={SW} strokeLinejoin="round"
+          {/* Shadow on ground */}
+          <ellipse cx="228" cy="272" rx="20" ry="4" fill="#5A8050" opacity="0.15" />
+
+          {/* Body / Dress */}
+          <motion.path
+            d="M218 290 Q220 278 228 274 Q236 278 238 290 L240 308 Q228 314 216 308 Z"
+            animate={{ fill: isBreak ? '#E8889A' : '#D8788A' }}
+            transition={{ duration: 1 }}
           />
+          {/* Dress detail - collar */}
+          <path d="M224 276 Q228 278 232 276" stroke="white" strokeWidth="0.8" fill="none" opacity="0.4" />
 
           {/* Arms */}
           {isBreak ? (
             <>
-              {/* Arm reaching for apple */}
-              <motion.line
-                x1="218" y1="294" x2="205" y2="284"
-                stroke={S} strokeWidth={SW} strokeLinecap="round"
-                animate={{ x2: [205, 202, 205], y2: [284, 282, 284] }}
-                transition={{ duration: 2.5, repeat: Infinity }}
+              <motion.path
+                d="M220 286 Q212 278 206 275"
+                stroke="#F0C8A8" strokeWidth="4" fill="none" strokeLinecap="round"
+                animate={{ d: ['M220 286 Q212 278 206 275', 'M220 286 Q212 276 204 273', 'M220 286 Q212 278 206 275'] }}
+                transition={{ duration: 3, repeat: Infinity }}
               />
               {/* Apple in hand */}
-              <motion.circle
-                cx="203" cy="282" r="4"
-                stroke={S} strokeWidth={SW * 0.8}
-                animate={{ cx: [203, 200, 203], cy: [282, 280, 282] }}
-                transition={{ duration: 2.5, repeat: Infinity }}
-              />
-              <line x1="233" y1="296" x2="240" y2="308" stroke={S} strokeWidth={SW} strokeLinecap="round" />
+              <motion.g
+                animate={{ x: [0, -2, 0], y: [0, -2, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                <circle cx="204" cy="273" r="5" fill="url(#appleGrad)" />
+                <ellipse cx="202.5" cy="271.5" rx="1.5" ry="1" fill="white" opacity="0.3" />
+              </motion.g>
+              <path d="M236 288 Q242 296 244 304" stroke="#F0C8A8" strokeWidth="4" fill="none" strokeLinecap="round" />
             </>
           ) : (
             <>
-              <line x1="218" y1="294" x2="208" y2="310" stroke={S} strokeWidth={SW} strokeLinecap="round" />
-              <line x1="233" y1="296" x2="242" y2="310" stroke={S} strokeWidth={SW} strokeLinecap="round" />
+              <path d="M220 286 Q214 296 210 304" stroke="#F0C8A8" strokeWidth="4" fill="none" strokeLinecap="round" />
+              <path d="M236 288 Q242 298 244 306" stroke="#F0C8A8" strokeWidth="4" fill="none" strokeLinecap="round" />
             </>
           )}
 
-          {/* Legs - seated */}
-          <line x1="218" y1="318" x2="205" y2="332" stroke={S} strokeWidth={SW} strokeLinecap="round" />
-          <line x1="228" y1="318" x2="215" y2="335" stroke={S} strokeWidth={SW} strokeLinecap="round" />
-          {/* Shoes - small marks */}
-          <line x1="202" y1="332" x2="198" y2="332" stroke={S} strokeWidth={SW * 1.2} strokeLinecap="round" />
-          <line x1="212" y1="335" x2="208" y2="335" stroke={S} strokeWidth={SW * 1.2} strokeLinecap="round" />
+          {/* Legs */}
+          <path d="M220 308 Q214 318 208 326" stroke="#F0C8A8" strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d="M230 308 Q224 320 218 328" stroke="#F0C8A8" strokeWidth="4" fill="none" strokeLinecap="round" />
+          {/* Shoes */}
+          <ellipse cx="206" cy="328" rx="6" ry="3.5" fill="#8B7355" rx="6" />
+          <ellipse cx="216" cy="330" rx="6" ry="3.5" fill="#8B7355" />
 
           {/* Head */}
-          <circle cx="225" cy="272" r="14" stroke={S} strokeWidth={SW} />
+          <circle cx="228" cy="260" r="16" fill="#F0C8A8" />
 
-          {/* Hair - simple strokes */}
-          <path d="M211 268 Q215 255 225 253 Q235 255 239 268" stroke={S} strokeWidth={SW} strokeLinecap="round" />
-          <line x1="211" y1="268" x2="211" y2="278" stroke={S} strokeWidth={SW * 0.7} strokeLinecap="round" />
-          <line x1="239" y1="268" x2="239" y2="278" stroke={S} strokeWidth={SW * 0.7} strokeLinecap="round" />
-          {/* Hair detail */}
-          <path d="M215 256 Q218 250 222 254" stroke={S} strokeWidth={SW * 0.5} strokeLinecap="round" opacity={0.4} />
+          {/* Hair */}
+          <path d="M212 256 Q215 242 228 240 Q241 242 244 256" fill="#6B4930" />
+          <ellipse cx="212" cy="258" rx="3.5" ry="9" fill="#6B4930" />
+          <ellipse cx="244" cy="258" rx="3.5" ry="9" fill="#6B4930" />
+          {/* Hair highlight */}
+          <path d="M218 244 Q222 240 226 243" stroke="#8B6540" strokeWidth="1" fill="none" opacity="0.5" />
+          {/* Hair band */}
+          <path d="M214 252 Q228 248 242 252" stroke="#E8889A" strokeWidth="1.8" fill="none" />
 
           {/* Face */}
           {isBreak ? (
             <>
-              {/* Happy eyes - arcs */}
-              <path d="M219 271 Q221 268 223 271" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
-              <path d="M227 271 Q229 268 231 271" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
-              {/* Smile */}
+              {/* Happy closed eyes */}
+              <path d="M222 259 Q224 256 226 259" stroke="#5A3A20" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              <path d="M230 259 Q232 256 234 259" stroke="#5A3A20" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              {/* Happy mouth */}
               <motion.path
-                d="M221 278 Q225 283 229 278"
-                stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round"
+                d="M224 266 Q228 271 232 266"
+                stroke="#D06060" strokeWidth="1.5" fill="none" strokeLinecap="round"
                 className="animate-munch"
               />
-              {/* Blush - tiny dots */}
-              <circle cx="218" cy="276" r="1.5" stroke={S} strokeWidth={SW * 0.3} opacity={0.2} />
-              <circle cx="232" cy="276" r="1.5" stroke={S} strokeWidth={SW * 0.3} opacity={0.2} />
+              {/* Blush */}
+              <circle cx="220" cy="264" r="3.5" fill="#F0A0A0" opacity="0.35" />
+              <circle cx="236" cy="264" r="3.5" fill="#F0A0A0" opacity="0.35" />
             </>
           ) : (
             <>
-              {/* Focused eyes - dots */}
-              <motion.g className="animate-blink" style={{ transformOrigin: '225px 271px' }}>
-                <circle cx="220" cy="271" r="1.2" fill={S} />
-                <circle cx="230" cy="271" r="1.2" fill={S} />
+              {/* Focused eyes */}
+              <motion.g className="animate-blink" style={{ transformOrigin: '228px 259px' }}>
+                <circle cx="223" cy="259" r="2" fill="#5A3A20" />
+                <circle cx="233" cy="259" r="2" fill="#5A3A20" />
+                {/* Eye highlights */}
+                <circle cx="224" cy="258" r="0.7" fill="white" />
+                <circle cx="234" cy="258" r="0.7" fill="white" />
               </motion.g>
-              {/* Neutral mouth */}
-              <line x1="223" y1="278" x2="228" y2="278" stroke={S} strokeWidth={SW * 0.8} strokeLinecap="round" />
+              {/* Focused mouth - small line */}
+              <line x1="226" y1="266" x2="231" y2="266" stroke="#B07060" strokeWidth="1.5" strokeLinecap="round" />
             </>
           )}
         </motion.g>
-
-        {/* Small flowers - minimal */}
-        {[80, 310, 350].map((x, i) => (
-          <g key={`flower-${i}`} opacity={0.25}>
-            <line x1={x} y1={320} x2={x} y2={312} stroke={S} strokeWidth={SW * 0.5} />
-            <circle cx={x} cy={310} r="2.5" stroke={S} strokeWidth={SW * 0.5} />
-          </g>
-        ))}
       </motion.svg>
     </div>
   );

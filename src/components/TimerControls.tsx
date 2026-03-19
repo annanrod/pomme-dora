@@ -12,34 +12,38 @@ interface TimerControlsProps {
 
 const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerControlsProps) => {
   return (
-    <div className="flex items-center gap-3">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onReset}
-        className="rounded-full w-10 h-10 bg-card hover:bg-muted"
-      >
-        <RotateCcw className="w-4 h-4" />
-      </Button>
+    <div className="flex items-center gap-4">
+      <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onReset}
+          className="rounded-full w-11 h-11 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+        >
+          <RotateCcw className="w-[18px] h-[18px]" />
+        </Button>
+      </motion.div>
 
-      <motion.div whileTap={{ scale: 0.95 }}>
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.93 }}>
         <Button
           onClick={isRunning ? onPause : onStart}
-          className="rounded-full w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+          className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
           size="icon"
         >
           {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
         </Button>
       </motion.div>
 
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onSkip}
-        className="rounded-full w-10 h-10 bg-card hover:bg-muted"
-      >
-        <SkipForward className="w-4 h-4" />
-      </Button>
+      <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onSkip}
+          className="rounded-full w-11 h-11 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+        >
+          <SkipForward className="w-[18px] h-[18px]" />
+        </Button>
+      </motion.div>
     </div>
   );
 };

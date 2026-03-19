@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fredoka:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,48 +7,37 @@
 @layer base {
   :root {
     --font-display: 'Fredoka', sans-serif;
-    --font-body: 'Quicksand', sans-serif;
+    --font-body: 'Nunito', sans-serif;
 
-    --background: 40 33% 96%;
-    --foreground: 30 20% 20%;
+    --background: 38 40% 97%;
+    --foreground: 25 25% 18%;
 
-    --card: 40 30% 94%;
-    --card-foreground: 30 20% 20%;
+    --card: 38 35% 95%;
+    --card-foreground: 25 25% 18%;
 
-    --popover: 40 33% 96%;
-    --popover-foreground: 30 20% 20%;
+    --popover: 38 40% 97%;
+    --popover-foreground: 25 25% 18%;
 
-    --primary: 142 35% 35%;
-    --primary-foreground: 40 33% 96%;
+    --primary: 145 30% 42%;
+    --primary-foreground: 38 40% 97%;
 
-    --secondary: 35 60% 55%;
-    --secondary-foreground: 40 33% 96%;
+    --secondary: 30 55% 58%;
+    --secondary-foreground: 38 40% 97%;
 
-    --muted: 40 20% 90%;
-    --muted-foreground: 30 10% 50%;
+    --muted: 35 22% 91%;
+    --muted-foreground: 25 12% 52%;
 
-    --accent: 10 65% 58%;
-    --accent-foreground: 40 33% 96%;
+    --accent: 5 60% 58%;
+    --accent-foreground: 38 40% 97%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 40 33% 96%;
+    --destructive-foreground: 38 40% 97%;
 
-    --border: 35 20% 85%;
-    --input: 35 20% 85%;
-    --ring: 142 35% 35%;
+    --border: 30 18% 88%;
+    --input: 30 18% 88%;
+    --ring: 145 30% 42%;
 
     --radius: 1rem;
-
-    --sky-focus: 210 30% 75%;
-    --sky-break: 45 70% 80%;
-    --ground: 30 30% 70%;
-    --tree-trunk: 25 40% 30%;
-    --tree-leaves: 130 40% 40%;
-    --tree-leaves-break: 100 50% 50%;
-    --apple-red: 0 70% 50%;
-    --dora-skin: 30 50% 75%;
-    --dora-hair: 25 50% 25%;
-    --dora-dress: 340 45% 55%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -61,44 +50,33 @@
   }
 
   .dark {
-    --background: 220 15% 12%;
-    --foreground: 40 20% 90%;
+    --background: 220 16% 11%;
+    --foreground: 35 20% 88%;
 
-    --card: 220 15% 16%;
-    --card-foreground: 40 20% 90%;
+    --card: 220 14% 15%;
+    --card-foreground: 35 20% 88%;
 
-    --popover: 220 15% 16%;
-    --popover-foreground: 40 20% 90%;
+    --popover: 220 14% 15%;
+    --popover-foreground: 35 20% 88%;
 
-    --primary: 142 35% 45%;
-    --primary-foreground: 220 15% 12%;
+    --primary: 145 28% 48%;
+    --primary-foreground: 220 16% 11%;
 
-    --secondary: 35 50% 45%;
-    --secondary-foreground: 220 15% 12%;
+    --secondary: 30 40% 48%;
+    --secondary-foreground: 220 16% 11%;
 
-    --muted: 220 10% 22%;
-    --muted-foreground: 40 10% 60%;
+    --muted: 220 12% 20%;
+    --muted-foreground: 35 12% 58%;
 
-    --accent: 10 55% 50%;
-    --accent-foreground: 220 15% 12%;
+    --accent: 5 50% 52%;
+    --accent-foreground: 220 16% 11%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 40 20% 90%;
+    --destructive-foreground: 35 20% 88%;
 
-    --border: 220 10% 25%;
-    --input: 220 10% 25%;
-    --ring: 142 35% 45%;
-
-    --sky-focus: 220 20% 20%;
-    --sky-break: 220 15% 28%;
-    --ground: 25 15% 22%;
-    --tree-trunk: 25 30% 25%;
-    --tree-leaves: 130 30% 30%;
-    --tree-leaves-break: 100 40% 38%;
-    --apple-red: 0 60% 45%;
-    --dora-skin: 30 35% 60%;
-    --dora-hair: 25 40% 20%;
-    --dora-dress: 340 35% 45%;
+    --border: 220 10% 22%;
+    --input: 220 10% 22%;
+    --ring: 145 28% 48%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -134,23 +112,14 @@
 }
 
 @keyframes sway {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
-}
-@keyframes fall {
-  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translateY(120px) rotate(45deg); opacity: 0; }
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
 }
 @keyframes leaf-float {
-  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
-  25% { transform: translateX(5px) translateY(-3px) rotate(5deg); }
-  50% { transform: translateX(-3px) translateY(2px) rotate(-3deg); }
-  75% { transform: translateX(4px) translateY(-1px) rotate(4deg); }
-}
-@keyframes bounce-subtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(3px) translateY(-2px); }
+  50% { transform: translateX(-2px) translateY(1px); }
+  75% { transform: translateX(2px) translateY(-1px); }
 }
 @keyframes blink {
   0%, 90%, 100% { transform: scaleY(1); }
@@ -165,10 +134,8 @@
   50% { opacity: 0.6; }
 }
 
-.animate-sway { animation: sway 4s ease-in-out infinite; }
-.animate-fall { animation: fall 2s ease-in forwards; }
-.animate-leaf { animation: leaf-float 6s ease-in-out infinite; }
-.animate-bounce-subtle { animation: bounce-subtle 0.4s ease-out; }
+.animate-sway { animation: sway 5s ease-in-out infinite; }
+.animate-leaf { animation: leaf-float 7s ease-in-out infinite; }
 .animate-blink { animation: blink 4s ease-in-out infinite; }
-.animate-munch { animation: munch 0.6s ease-in-out infinite; }
+.animate-munch { animation: munch 0.8s ease-in-out infinite; }
 .animate-glow { animation: glow-pulse 3s ease-in-out infinite; }
