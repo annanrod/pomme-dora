@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n';
 import { getDurationForSession, getNextSessionState, resolveRuntime } from '@/domain/pomodoro';
 import { readStoredRuntime, writeStoredRuntime } from '@/lib/pomodoroRuntimeStorage';
+import { usePomodoroHistory } from './usePomodoroHistory';
 import { usePomodoroAudio } from './usePomodoroAudio';
 import { usePomodoroNotifications } from './usePomodoroNotifications';
 import { useLocalStorage } from './useLocalStorage';
@@ -45,22 +46,22 @@ export function usePomodoro() {
   const previousSettingsRef = useRef(settings);
   const previousSessionTypeRef = useRef(sessionType);
   const hasRestoredRuntimeRef = useRef(false);
-  const previousSessionRef = useRef<SessionSnapshot | null>(null);
 
   const { playCountdownBeep, playCycleSound, primeCountdownAudio, resetCountdownState } = usePomodoroAudio();
   const { notifySessionComplete, requestPermission } = usePomodoroNotifications();
+  const { push, pop, clear, canGoBack } = usePomodoroHistory<SessionSnapshot>();
 
   const totalTime = getDurationForSession(sessionType, settings);
   const progress = 1 - timeLeft / totalTime;
 
   const captureSessionSnapshot = useCallback(() => {
-    previousSessionRef.current = {
+    push({
       sessionType,
       timeLeft,
       sessionsCompleted,
       stats,
-    };
-  }, [sessionType, sessionsCompleted, stats, timeLeft]);
+    });
+  }, [push, sessionType, sessionsCompleted, stats, timeLeft]);
 
   const getMotivationalMessage = useCallback(() => {
     return t.notifications.motivational[Math.floor(Math.random() * t.notifications.motivational.length)];
@@ -180,12 +181,12 @@ export function usePomodoro() {
         resolved.sessionType !== sessionType ||
         resolved.sessionsCompleted !== sessionsCompleted
       ) {
-        previousSessionRef.current = {
+        push({
           sessionType,
           timeLeft,
           sessionsCompleted,
           stats,
-        };
+        });
       }
 
       targetTimestampRef.current = resolved.targetTimestamp;
@@ -213,7 +214,7 @@ export function usePomodoro() {
       window.removeEventListener('focus', syncRemainingTime);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isRunning, sessionType, sessionsCompleted, setStats, settings, stats, timeLeft]);
+  }, [isRunning, push, sessionType, sessionsCompleted, setStats, settings, stats, timeLeft]);
 
   useEffect(() => {
     if (!isRunning || !settings.soundEnabled || timeLeft > 3 || timeLeft <= 0) {
@@ -269,9 +270,10 @@ export function usePomodoro() {
   const reset = useCallback(() => {
     setIsRunning(false);
     targetTimestampRef.current = null;
+    clear();
     resetCountdownState();
     setTimeLeft(getDurationForSession(sessionType, settings));
-  }, [resetCountdownState, sessionType, settings]);
+  }, [clear, resetCountdownState, sessionType, settings]);
 
   const skip = useCallback(() => {
     setIsRunning(false);
@@ -281,7 +283,7 @@ export function usePomodoro() {
   }, [completeSession, resetCountdownState]);
 
   const goBack = useCallback(() => {
-    const previousSession = previousSessionRef.current;
+    const previousSession = pop();
     if (!previousSession) return;
 
     setIsRunning(false);
@@ -291,8 +293,7 @@ export function usePomodoro() {
     setTimeLeft(previousSession.timeLeft);
     setSessionsCompleted(previousSession.sessionsCompleted);
     setStats(previousSession.stats);
-    previousSessionRef.current = null;
-  }, [resetCountdownState, setStats]);
+  }, [pop, resetCountdownState, setStats]);
 
   const updateSettings = useCallback((newSettings: PomodoroSettings) => {
     setSettings(newSettings);
@@ -308,10 +309,10 @@ export function usePomodoro() {
     setIsRunning(false);
     targetTimestampRef.current = null;
     setSessionType('focus');
-    previousSessionRef.current = null;
+    clear();
     resetCountdownState();
     setTimeLeft(settings.focusMinutes * 60);
-  }, [resetCountdownState, setStats, settings.focusMinutes]);
+  }, [clear, resetCountdownState, setStats, settings.focusMinutes]);
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -334,7 +335,7 @@ export function usePomodoro() {
     reset,
     goBack,
     skip,
-    canGoBack: previousSessionRef.current !== null,
+    canGoBack,
     updateSettings,
     resetSettings,
     resetStats,

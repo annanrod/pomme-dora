@@ -124,4 +124,38 @@ describe('usePomodoro', () => {
 
     expect(result.current.timeLeft).toBe(result.current.settings.focusMinutes * 60 - 3);
   });
+
+  it('can go back through multiple session transitions', () => {
+    const { result } = renderHook(() => usePomodoro(), { wrapper: I18nProvider });
+
+    act(() => {
+      result.current.skip();
+    });
+
+    expect(result.current.sessionType).toBe('shortBreak');
+    expect(result.current.canGoBack).toBe(true);
+
+    act(() => {
+      result.current.skip();
+    });
+
+    expect(result.current.sessionType).toBe('focus');
+    expect(result.current.sessionsCompleted).toBe(1);
+
+    act(() => {
+      result.current.goBack();
+    });
+
+    expect(result.current.sessionType).toBe('shortBreak');
+    expect(result.current.sessionsCompleted).toBe(1);
+    expect(result.current.canGoBack).toBe(true);
+
+    act(() => {
+      result.current.goBack();
+    });
+
+    expect(result.current.sessionType).toBe('focus');
+    expect(result.current.sessionsCompleted).toBe(0);
+    expect(result.current.canGoBack).toBe(false);
+  });
 });
