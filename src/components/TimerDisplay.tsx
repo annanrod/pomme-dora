@@ -22,9 +22,9 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
   };
 
   return (
-    <div className="flex w-full flex-col items-center gap-4 sm:gap-5">
+    <div className="flex w-full flex-col items-center gap-3 sm:gap-4">
       <motion.div
-        className="px-2 text-center font-display text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm"
+        className="px-2 text-center font-display text-[11px] font-semibold uppercase tracking-[0.18em] sm:text-xs"
         key={sessionType}
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0, color: isBreak ? 'hsl(145, 30%, 42%)' : 'hsl(5, 55%, 55%)' }}
@@ -33,7 +33,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
         {sessionLabels[sessionType]}
       </motion.div>
 
-      <div className="relative flex aspect-square w-[min(72vw,18rem)] items-center justify-center sm:w-[min(52vw,19rem)] md:w-[18rem]">
+      <div className="relative flex aspect-square w-[min(56vw,24vh,13rem)] items-center justify-center sm:w-[min(34vw,23vh,14rem)] md:w-[min(15rem,24vh)]">
         <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 200 200">
           {/* Background track */}
           <circle
@@ -58,7 +58,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
           />
         </svg>
         <motion.div
-          className="text-[clamp(2.25rem,9vw,3.25rem)] font-display font-bold tracking-tight text-foreground tabular-nums"
+          className="text-[clamp(1.8rem,7vw,2.7rem)] font-display font-bold tracking-tight text-foreground tabular-nums"
           key={formattedTime}
           initial={{ scale: 1.03 }}
           animate={{ scale: 1 }}
@@ -83,7 +83,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
             transition={{ duration: 0.3, delay: i * 0.05 }}
           />
         ))}
-        <span className="ml-1.5 text-xs font-body font-medium text-muted-foreground sm:text-sm">
+        <span className="ml-1.5 text-[11px] font-body font-medium text-muted-foreground sm:text-xs">
           {sessionsCompleted} {t.timer.sessions}
         </span>
       </div>

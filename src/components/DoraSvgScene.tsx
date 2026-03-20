@@ -26,7 +26,7 @@ const DoraSvgScene = ({ sessionType }: DoraSvgSceneProps) => {
     : (isDarkMode ? t.illustrations.focusDark : t.illustrations.focusLight);
 
   return (
-    <div className="relative mx-auto w-full max-w-[19rem] sm:max-w-[23rem] md:max-w-[26rem] lg:max-w-[30rem]">
+    <div className="relative mx-auto w-full max-w-[min(78vw,36vh,18rem)] sm:max-w-[min(56vw,38vh,21rem)] md:max-w-[min(42vw,40vh,24rem)]">
       <AnimatePresence mode="wait">
         <motion.div
           key={`${isBreak ? 'break' : 'focus'}-${isDarkMode ? 'dark' : 'light'}`}

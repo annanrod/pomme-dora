@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n';
+import notificationSound from '@/assets/notification.mp3';
 import { useLocalStorage } from './useLocalStorage';
 
 export type SessionType = 'focus' | 'shortBreak' | 'longBreak';
@@ -9,6 +10,7 @@ export interface PomodoroSettings {
   shortBreakMinutes: number;
   longBreakMinutes: number;
   longBreakInterval: number;
+  soundEnabled: boolean;
 }
 
 export interface PomodoroStats {
@@ -25,6 +27,7 @@ export const DEFAULT_SETTINGS: PomodoroSettings = {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   longBreakInterval: 4,
+  soundEnabled: true,
 };
 
 const DEFAULT_STATS: PomodoroStats = {
@@ -77,6 +80,7 @@ export function usePomodoro() {
   const [isRunning, setIsRunning] = useState(false);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const intervalRef = useRef<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const previousSettingsRef = useRef(settings);
   const previousSessionTypeRef = useRef(sessionType);
 
@@ -87,6 +91,15 @@ export function usePomodoro() {
     : settings.longBreakMinutes * 60;
 
   const progress = 1 - timeLeft / totalTime;
+
+  useEffect(() => {
+    audioRef.current = new Audio(notificationSound);
+    audioRef.current.preload = 'auto';
+
+    return () => {
+      audioRef.current = null;
+    };
+  }, []);
 
   const getMotivationalMessage = useCallback(() => {
     return t.notifications.motivational[Math.floor(Math.random() * t.notifications.motivational.length)];
@@ -151,6 +164,13 @@ export function usePomodoro() {
       setTimeLeft(settings.focusMinutes * 60);
     }
     setIsRunning(false);
+
+    if (settings.soundEnabled && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      void audioRef.current.play().catch(() => {
+        // Browser autoplay restrictions can block playback until the user interacts.
+      });
+    }
 
     if ('Notification' in window && Notification.permission === 'granted') {
       const title = sessionType === 'focus' ? t.notifications.focusCompleteTitle : t.notifications.breakCompleteTitle;

@@ -2,6 +2,7 @@ import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useI18n } from '@/i18n';
 import type { PomodoroSettings } from '@/hooks/usePomodoro';
@@ -18,7 +19,7 @@ interface SettingsPanelProps {
 const SettingsPanel = ({ settings, onUpdateSettings, onResetSettings, onResetStats, darkMode, onToggleDarkMode }: SettingsPanelProps) => {
   const { t } = useI18n();
 
-  const update = (key: keyof PomodoroSettings, value: number) => {
+  const update = <K extends keyof PomodoroSettings>(key: K, value: PomodoroSettings[K]) => {
     const newSettings = { ...settings, [key]: value };
     onUpdateSettings(newSettings);
   };
@@ -66,6 +67,13 @@ const SettingsPanel = ({ settings, onUpdateSettings, onResetSettings, onResetSta
               value={[settings.longBreakInterval]}
               onValueChange={([v]) => update('longBreakInterval', v)}
               min={2} max={8} step={1}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-3">
+            <Label className="font-body text-sm text-muted-foreground">{t.settings.soundAlerts}</Label>
+            <Switch
+              checked={settings.soundEnabled}
+              onCheckedChange={(checked) => update('soundEnabled', checked)}
             />
           </div>
 
