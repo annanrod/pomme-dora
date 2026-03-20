@@ -58,13 +58,29 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
           />
         </svg>
         <motion.div
-          className="text-[clamp(1.8rem,7vw,2.7rem)] font-display font-bold tracking-tight text-foreground tabular-nums"
+          className="absolute inset-0 flex items-center justify-center"
           key={formattedTime}
           initial={{ scale: 1.03 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.15 }}
         >
-          {formattedTime}
+          <svg
+            className="h-[54%] w-[68%] overflow-visible"
+            viewBox="0 0 140 60"
+            aria-hidden="true"
+          >
+            <text
+              x="70"
+              y="30"
+              textAnchor="middle"
+              dominantBaseline="central"
+              textLength="112"
+              lengthAdjust="spacingAndGlyphs"
+              className="fill-foreground font-display text-[46px] font-bold tabular-nums"
+            >
+              {formattedTime}
+            </text>
+          </svg>
         </motion.div>
       </div>
 
