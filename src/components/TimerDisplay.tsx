@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useI18n } from '@/i18n';
 import type { SessionType } from '@/hooks/usePomodoro';
 
 interface TimerDisplayProps {
@@ -8,17 +9,17 @@ interface TimerDisplayProps {
   sessionsCompleted: number;
 }
 
-const SESSION_LABELS: Record<SessionType, string> = {
-  focus: '🍎 Focus Time',
-  shortBreak: '🌿 Short Break',
-  longBreak: '🌳 Long Break',
-};
-
 const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted }: TimerDisplayProps) => {
+  const { t } = useI18n();
   const radius = 88;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
   const isBreak = sessionType !== 'focus';
+  const sessionLabels: Record<SessionType, string> = {
+    focus: t.timer.focus,
+    shortBreak: t.timer.shortBreak,
+    longBreak: t.timer.longBreak,
+  };
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -29,7 +30,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
         animate={{ opacity: 1, y: 0, color: isBreak ? 'hsl(145, 30%, 42%)' : 'hsl(5, 55%, 55%)' }}
         transition={{ duration: 0.4 }}
       >
-        {SESSION_LABELS[sessionType]}
+        {sessionLabels[sessionType]}
       </motion.div>
 
       <div className="relative w-48 h-48 flex items-center justify-center">
@@ -83,7 +84,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
           />
         ))}
         <span className="text-xs text-muted-foreground ml-1.5 font-body font-medium">
-          {sessionsCompleted} sessions
+          {sessionsCompleted} {t.timer.sessions}
         </span>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useI18n } from '@/i18n';
 import { useLocalStorage } from './useLocalStorage';
 
 export type SessionType = 'focus' | 'shortBreak' | 'longBreak';
@@ -17,10 +18,9 @@ export interface PomodoroStats {
   bestStreak: number;
   lastSessionDate: string | null;
   achievements: string[];
-  treeLevel: number;
 }
 
-const DEFAULT_SETTINGS: PomodoroSettings = {
+export const DEFAULT_SETTINGS: PomodoroSettings = {
   focusMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
@@ -34,21 +34,41 @@ const DEFAULT_STATS: PomodoroStats = {
   bestStreak: 0,
   lastSessionDate: null,
   achievements: [],
-  treeLevel: 1,
 };
 
-const MOTIVATIONAL_MESSAGES = [
-  "You're doing great! 🌟",
-  "Stay focused, Dora believes in you! 🍎",
-  "One apple at a time! 🌳",
-  "Your tree is growing! 🌱",
-  "Focus is your superpower! ✨",
-  "Almost there, keep going! 💪",
-  "Great work! Time to rest 🌸",
-  "You earned this break! ☕",
-];
+const DAY_IN_MS = 86400000;
+
+function getTodayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, '0');
+  const day = `${now.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseStoredSessionDate(value: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(`${value}T00:00:00`);
+  }
+
+  const parsed = new Date(value);
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
+function getStreakFromLastSession(lastSessionDate: string | null, currentStreak: number, todayKey: string) {
+  if (!lastSessionDate) return 1;
+
+  const today = new Date(`${todayKey}T00:00:00`);
+  const lastSession = parseStoredSessionDate(lastSessionDate);
+  const diffInDays = Math.round((today.getTime() - lastSession.getTime()) / DAY_IN_MS);
+
+  if (diffInDays <= 0) return currentStreak;
+  if (diffInDays === 1) return currentStreak + 1;
+  return 1;
+}
 
 export function usePomodoro() {
+  const { t } = useI18n();
   const [settings, setSettings] = useLocalStorage<PomodoroSettings>('pomme-settings', DEFAULT_SETTINGS);
   const [stats, setStats] = useLocalStorage<PomodoroStats>('pomme-stats', DEFAULT_STATS);
   
@@ -57,6 +77,8 @@ export function usePomodoro() {
   const [isRunning, setIsRunning] = useState(false);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const intervalRef = useRef<number | null>(null);
+  const previousSettingsRef = useRef(settings);
+  const previousSessionTypeRef = useRef(sessionType);
 
   const totalTime = sessionType === 'focus'
     ? settings.focusMinutes * 60
@@ -67,8 +89,8 @@ export function usePomodoro() {
   const progress = 1 - timeLeft / totalTime;
 
   const getMotivationalMessage = useCallback(() => {
-    return MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)];
-  }, []);
+    return t.notifications.motivational[Math.floor(Math.random() * t.notifications.motivational.length)];
+  }, [t.notifications.motivational]);
 
   const checkAchievements = useCallback((newStats: PomodoroStats) => {
     const achievements = [...newStats.achievements];
@@ -98,20 +120,16 @@ export function usePomodoro() {
 
   const completeSession = useCallback(() => {
     if (sessionType === 'focus') {
-      const today = new Date().toDateString();
+      const todayKey = getTodayKey();
       setStats(prev => {
-        const isConsecutiveDay = prev.lastSessionDate
-          ? (new Date(today).getTime() - new Date(prev.lastSessionDate).getTime()) <= 86400000
-          : true;
-        const newStreak = isConsecutiveDay ? prev.currentStreak + 1 : 1;
+        const newStreak = getStreakFromLastSession(prev.lastSessionDate, prev.currentStreak, todayKey);
         const newStats: PomodoroStats = {
           ...prev,
           totalSessions: prev.totalSessions + 1,
           totalFocusMinutes: prev.totalFocusMinutes + settings.focusMinutes,
           currentStreak: newStreak,
           bestStreak: Math.max(prev.bestStreak, newStreak),
-          lastSessionDate: today,
-          treeLevel: Math.min(10, Math.floor((prev.totalSessions + 1) / 3) + 1),
+          lastSessionDate: todayKey,
           achievements: prev.achievements,
         };
         newStats.achievements = checkAchievements(newStats);
@@ -135,11 +153,11 @@ export function usePomodoro() {
     setIsRunning(false);
 
     if ('Notification' in window && Notification.permission === 'granted') {
-      const title = sessionType === 'focus' ? '🍎 Focus Complete!' : '🌳 Break Over!';
-      const body = sessionType === 'focus' ? 'Time for a break!' : 'Ready to focus again?';
+      const title = sessionType === 'focus' ? t.notifications.focusCompleteTitle : t.notifications.breakCompleteTitle;
+      const body = sessionType === 'focus' ? t.notifications.focusCompleteBody : t.notifications.breakCompleteBody;
       new Notification(title, { body: `${body}\n${getMotivationalMessage()}` });
     }
-  }, [sessionType, sessionsCompleted, settings, setStats, checkAchievements, getMotivationalMessage]);
+  }, [checkAchievements, getMotivationalMessage, sessionType, sessionsCompleted, setStats, settings, t.notifications.breakCompleteBody, t.notifications.breakCompleteTitle, t.notifications.focusCompleteBody, t.notifications.focusCompleteTitle]);
 
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
@@ -153,6 +171,28 @@ export function usePomodoro() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isRunning, timeLeft, completeSession]);
+
+  useEffect(() => {
+    const settingsChanged =
+      previousSettingsRef.current.focusMinutes !== settings.focusMinutes ||
+      previousSettingsRef.current.shortBreakMinutes !== settings.shortBreakMinutes ||
+      previousSettingsRef.current.longBreakMinutes !== settings.longBreakMinutes ||
+      previousSettingsRef.current.longBreakInterval !== settings.longBreakInterval;
+    const sessionTypeChanged = previousSessionTypeRef.current !== sessionType;
+
+    previousSettingsRef.current = settings;
+    previousSessionTypeRef.current = sessionType;
+
+    if (isRunning || (!settingsChanged && !sessionTypeChanged)) return;
+
+    if (sessionType === 'focus') {
+      setTimeLeft(settings.focusMinutes * 60);
+    } else if (sessionType === 'shortBreak') {
+      setTimeLeft(settings.shortBreakMinutes * 60);
+    } else {
+      setTimeLeft(settings.longBreakMinutes * 60);
+    }
+  }, [isRunning, sessionType, settings]);
 
   const start = useCallback(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -179,12 +219,22 @@ export function usePomodoro() {
 
   const updateSettings = useCallback((newSettings: PomodoroSettings) => {
     setSettings(newSettings);
-    if (!isRunning) {
-      if (sessionType === 'focus') setTimeLeft(newSettings.focusMinutes * 60);
-      else if (sessionType === 'shortBreak') setTimeLeft(newSettings.shortBreakMinutes * 60);
-      else setTimeLeft(newSettings.longBreakMinutes * 60);
-    }
-  }, [isRunning, sessionType, setSettings]);
+  }, [setSettings]);
+
+  const resetSettings = useCallback(() => {
+    setSettings(DEFAULT_SETTINGS);
+  }, [setSettings]);
+
+  const resetStats = useCallback(() => {
+    setStats(prev => ({
+      ...DEFAULT_STATS,
+      achievements: prev.achievements,
+    }));
+    setSessionsCompleted(0);
+    setIsRunning(false);
+    setSessionType('focus');
+    setTimeLeft(settings.focusMinutes * 60);
+  }, [setStats, settings.focusMinutes]);
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -202,12 +252,13 @@ export function usePomodoro() {
     settings,
     stats,
     formattedTime: formatTime(timeLeft),
-    motivationalMessage: getMotivationalMessage(),
     start,
     pause,
     reset,
     skip,
     updateSettings,
+    resetSettings,
+    resetStats,
     setStats,
   };
 }

@@ -1,56 +1,49 @@
 import { Trophy, Flame, Clock, TreePine } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n';
 import type { PomodoroStats } from '@/hooks/usePomodoro';
 
 interface StatsPanelProps {
   stats: PomodoroStats;
 }
 
-const ACHIEVEMENT_INFO: Record<string, { label: string; icon: string }> = {
-  first_session: { label: 'First Apple', icon: '🍎' },
-  ten_sessions: { label: '10 Sessions', icon: '🌟' },
-  fifty_sessions: { label: '50 Sessions', icon: '👑' },
-  three_streak: { label: '3-Day Streak', icon: '🔥' },
-  week_streak: { label: 'Week Streak', icon: '⚡' },
-  one_hour: { label: '1 Hour Focused', icon: '⏰' },
-  ten_hours: { label: '10 Hours Focused', icon: '🏆' },
+const ACHIEVEMENT_ICONS: Record<string, string> = {
+  first_session: '🍎',
+  ten_sessions: '🌟',
+  fifty_sessions: '👑',
+  three_streak: '🔥',
+  week_streak: '⚡',
+  one_hour: '⏰',
+  ten_hours: '🏆',
 };
 
 const StatsPanel = ({ stats }: StatsPanelProps) => {
+  const { t } = useI18n();
+
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button aria-label={t.stats.open} variant="ghost" size="icon" className="rounded-full">
           <Trophy className="w-5 h-5 text-muted-foreground" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="bg-card border-border">
         <SheetHeader>
-          <SheetTitle className="font-display text-foreground">Your Progress</SheetTitle>
+          <SheetTitle className="font-display text-foreground">{t.stats.title}</SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-5">
           <div className="grid grid-cols-2 gap-3">
-            <StatCard icon={<Clock className="w-4 h-4 text-secondary" />} label="Focus Time" value={`${Math.floor(stats.totalFocusMinutes / 60)}h ${stats.totalFocusMinutes % 60}m`} />
-            <StatCard icon={<TreePine className="w-4 h-4 text-primary" />} label="Sessions" value={stats.totalSessions.toString()} />
-            <StatCard icon={<Flame className="w-4 h-4 text-accent" />} label="Streak" value={`${stats.currentStreak} days`} />
-            <StatCard icon={<Trophy className="w-4 h-4 text-secondary" />} label="Best Streak" value={`${stats.bestStreak} days`} />
+            <StatCard icon={<Clock className="w-4 h-4 text-secondary" />} label={t.stats.focusTime} value={`${Math.floor(stats.totalFocusMinutes / 60)}h ${stats.totalFocusMinutes % 60}m`} />
+            <StatCard icon={<TreePine className="w-4 h-4 text-primary" />} label={t.stats.sessions} value={stats.totalSessions.toString()} />
+            <StatCard icon={<Flame className="w-4 h-4 text-accent" />} label={t.stats.streak} value={`${stats.currentStreak} ${t.stats.days}`} />
+            <StatCard icon={<Trophy className="w-4 h-4 text-secondary" />} label={t.stats.bestStreak} value={`${stats.bestStreak} ${t.stats.days}`} />
           </div>
 
           <div>
-            <h3 className="font-display text-sm text-muted-foreground mb-3">Tree Level {stats.treeLevel}/10</h3>
-            <div className="w-full bg-muted rounded-full h-2.5">
-              <div
-                className="bg-primary rounded-full h-2.5 transition-all duration-500"
-                style={{ width: `${(stats.treeLevel / 10) * 100}%` }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-display text-sm text-muted-foreground mb-3">Achievements</h3>
+            <h3 className="font-display text-sm text-muted-foreground mb-3">{t.stats.achievements}</h3>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(ACHIEVEMENT_INFO).map(([key, info]) => {
+              {Object.keys(ACHIEVEMENT_ICONS).map((key) => {
                 const unlocked = stats.achievements.includes(key);
                 return (
                   <div
@@ -59,8 +52,8 @@ const StatsPanel = ({ stats }: StatsPanelProps) => {
                       unlocked ? 'bg-primary/10 text-foreground' : 'bg-muted text-muted-foreground opacity-50'
                     }`}
                   >
-                    <span className="text-base">{info.icon}</span>
-                    <span>{info.label}</span>
+                    <span className="text-base">{ACHIEVEMENT_ICONS[key]}</span>
+                    <span>{t.stats.achievementLabels[key as keyof typeof t.stats.achievementLabels]}</span>
                   </div>
                 );
               })}

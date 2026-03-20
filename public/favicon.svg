@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <radialGradient id="appleBody" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(24 18) rotate(53) scale(38 42)">
+      <stop offset="0" stop-color="#FF9A74" />
+      <stop offset="0.55" stop-color="#E85A47" />
+      <stop offset="1" stop-color="#BA2E2E" />
+    </radialGradient>
+    <radialGradient id="appleGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(24 24) rotate(45) scale(16 14)">
+      <stop stop-color="#FFD7C2" stop-opacity="0.95" />
+      <stop offset="1" stop-color="#FFD7C2" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <path d="M31.24 16.5c2.19-5.56 7.88-7.34 12.45-7.16-1.22 3.79-4.16 6.77-8.23 7.26-1.43.17-2.9.06-4.22-.1Z" fill="#5F8F3E"/>
+  <path d="M32.1 17.64c-4.65-2.78-10.75-1.9-14.66 1.9-6.4 6.23-7.22 19.69-.54 27.1 5.12 5.68 11.67 5.31 15.1 3.1 3.44 2.21 9.99 2.58 15.11-3.1 6.68-7.41 5.85-20.87-.54-27.1-3.9-3.8-10.01-4.68-14.47-1.9Z" fill="url(#appleBody)"/>
+  <path d="M32 15c-.85-3.36.26-7.26 3.12-10 2.35 2.78 2.9 7.08 1.38 10.44-.83 1.84-2.43 3.35-4.5 4.12-.2-1.45-.14-3 .01-4.56Z" fill="#6A452B"/>
+  <ellipse cx="24" cy="24" rx="8.5" ry="7" fill="url(#appleGlow)"/>
+</svg>

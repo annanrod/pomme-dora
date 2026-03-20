@@ -1,5 +1,6 @@
 import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n';
 import { motion } from 'framer-motion';
 
 interface TimerControlsProps {
@@ -11,10 +12,13 @@ interface TimerControlsProps {
 }
 
 const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerControlsProps) => {
+  const { t } = useI18n();
+
   return (
     <div className="flex items-center gap-4">
       <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}>
         <Button
+          aria-label={t.controls.reset}
           variant="ghost"
           size="icon"
           onClick={onReset}
@@ -26,6 +30,7 @@ const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerCo
 
       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.93 }}>
         <Button
+          aria-label={isRunning ? t.controls.pause : t.controls.start}
           onClick={isRunning ? onPause : onStart}
           className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20"
           size="icon"
@@ -36,6 +41,7 @@ const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerCo
 
       <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}>
         <Button
+          aria-label={t.controls.skip}
           variant="ghost"
           size="icon"
           onClick={onSkip}
