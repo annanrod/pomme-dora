@@ -49,6 +49,7 @@ const translations = {
       longBreak: 'Pausa longa',
       longBreakAfter: 'Pausa longa após',
       soundAlerts: 'Som ao finalizar',
+      autoplay: 'Autoplay',
       minutes: 'min',
       sessions: 'sessões',
       resetDefaults: 'Restaurar pomodoro padrão',
@@ -61,6 +62,8 @@ const translations = {
       start: 'Iniciar timer',
       pause: 'Pausar timer',
       skip: 'Pular sessão',
+      autoplayOn: 'Ativar autoplay',
+      autoplayOff: 'Desativar autoplay',
     },
     stats: {
       open: 'Abrir progresso',
@@ -134,6 +137,7 @@ const translations = {
       longBreak: 'Long break',
       longBreakAfter: 'Long break after',
       soundAlerts: 'Sound on completion',
+      autoplay: 'Autoplay',
       minutes: 'min',
       sessions: 'sessions',
       resetDefaults: 'Reset default pomodoro',
@@ -146,6 +150,8 @@ const translations = {
       start: 'Start timer',
       pause: 'Pause timer',
       skip: 'Skip session',
+      autoplayOn: 'Enable autoplay',
+      autoplayOff: 'Disable autoplay',
     },
     stats: {
       open: 'Open progress',

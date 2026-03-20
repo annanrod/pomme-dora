@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n';
+import beepSound from '@/assets/beep.mp3';
 import notificationSound from '@/assets/notification.mp3';
 import { useLocalStorage } from './useLocalStorage';
 
@@ -11,6 +12,7 @@ export interface PomodoroSettings {
   longBreakMinutes: number;
   longBreakInterval: number;
   soundEnabled: boolean;
+  autoplayEnabled: boolean;
 }
 
 export interface PomodoroStats {
@@ -28,6 +30,7 @@ export const DEFAULT_SETTINGS: PomodoroSettings = {
   longBreakMinutes: 15,
   longBreakInterval: 4,
   soundEnabled: true,
+  autoplayEnabled: false,
 };
 
 const DEFAULT_STATS: PomodoroStats = {
@@ -80,7 +83,9 @@ export function usePomodoro() {
   const [isRunning, setIsRunning] = useState(false);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const intervalRef = useRef<number | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cycleAudioRef = useRef<HTMLAudioElement | null>(null);
+  const beepAudioRef = useRef<HTMLAudioElement | null>(null);
+  const lastCountdownBeepRef = useRef<number | null>(null);
   const previousSettingsRef = useRef(settings);
   const previousSessionTypeRef = useRef(sessionType);
 
@@ -93,11 +98,14 @@ export function usePomodoro() {
   const progress = 1 - timeLeft / totalTime;
 
   useEffect(() => {
-    audioRef.current = new Audio(notificationSound);
-    audioRef.current.preload = 'auto';
+    cycleAudioRef.current = new Audio(notificationSound);
+    cycleAudioRef.current.preload = 'auto';
+    beepAudioRef.current = new Audio(beepSound);
+    beepAudioRef.current.preload = 'auto';
 
     return () => {
-      audioRef.current = null;
+      cycleAudioRef.current = null;
+      beepAudioRef.current = null;
     };
   }, []);
 
@@ -163,11 +171,12 @@ export function usePomodoro() {
       setSessionType('focus');
       setTimeLeft(settings.focusMinutes * 60);
     }
-    setIsRunning(false);
+    setIsRunning(settings.autoplayEnabled);
+    lastCountdownBeepRef.current = null;
 
-    if (settings.soundEnabled && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      void audioRef.current.play().catch(() => {
+    if (settings.soundEnabled && cycleAudioRef.current) {
+      cycleAudioRef.current.currentTime = 0;
+      void cycleAudioRef.current.play().catch(() => {
         // Browser autoplay restrictions can block playback until the user interacts.
       });
     }
@@ -193,11 +202,30 @@ export function usePomodoro() {
   }, [isRunning, timeLeft, completeSession]);
 
   useEffect(() => {
+    if (!isRunning || !settings.soundEnabled || timeLeft > 3 || timeLeft <= 0) {
+      if (timeLeft > 3 || !isRunning) {
+        lastCountdownBeepRef.current = null;
+      }
+      return;
+    }
+
+    if (lastCountdownBeepRef.current === timeLeft || !beepAudioRef.current) return;
+
+    lastCountdownBeepRef.current = timeLeft;
+    beepAudioRef.current.currentTime = 0;
+    void beepAudioRef.current.play().catch(() => {
+      // Browser autoplay restrictions can block playback until the user interacts.
+    });
+  }, [isRunning, settings.soundEnabled, timeLeft]);
+
+  useEffect(() => {
     const settingsChanged =
       previousSettingsRef.current.focusMinutes !== settings.focusMinutes ||
       previousSettingsRef.current.shortBreakMinutes !== settings.shortBreakMinutes ||
       previousSettingsRef.current.longBreakMinutes !== settings.longBreakMinutes ||
-      previousSettingsRef.current.longBreakInterval !== settings.longBreakInterval;
+      previousSettingsRef.current.longBreakInterval !== settings.longBreakInterval ||
+      previousSettingsRef.current.soundEnabled !== settings.soundEnabled ||
+      previousSettingsRef.current.autoplayEnabled !== settings.autoplayEnabled;
     const sessionTypeChanged = previousSessionTypeRef.current !== sessionType;
 
     previousSettingsRef.current = settings;
@@ -225,6 +253,7 @@ export function usePomodoro() {
 
   const reset = useCallback(() => {
     setIsRunning(false);
+    lastCountdownBeepRef.current = null;
     setTimeLeft(sessionType === 'focus'
       ? settings.focusMinutes * 60
       : sessionType === 'shortBreak'
@@ -234,6 +263,7 @@ export function usePomodoro() {
 
   const skip = useCallback(() => {
     setIsRunning(false);
+    lastCountdownBeepRef.current = null;
     completeSession();
   }, [completeSession]);
 
@@ -253,6 +283,7 @@ export function usePomodoro() {
     setSessionsCompleted(0);
     setIsRunning(false);
     setSessionType('focus');
+    lastCountdownBeepRef.current = null;
     setTimeLeft(settings.focusMinutes * 60);
   }, [setStats, settings.focusMinutes]);
 
