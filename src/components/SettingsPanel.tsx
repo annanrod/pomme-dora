@@ -42,11 +42,11 @@ const SettingsPanel = ({ settings, isRunning, onUpdateSettings, onResetSettings,
           <Settings className="w-5 h-5 text-muted-foreground" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="bg-card border-border">
-        <SheetHeader>
+      <SheetContent className="flex h-full flex-col bg-card border-border">
+        <SheetHeader className="shrink-0 pr-10">
           <SheetTitle className="font-display text-foreground">{t.settings.title}</SheetTitle>
         </SheetHeader>
-        <div className="mt-6 space-y-6">
+        <div className="mt-6 min-h-0 flex-1 space-y-6 overflow-y-auto pr-1">
           {isRunning ? (
             <div className="rounded-xl border border-border/70 bg-muted/35 px-3 py-3 text-sm font-body text-muted-foreground">
               {t.settings.pauseToEdit}

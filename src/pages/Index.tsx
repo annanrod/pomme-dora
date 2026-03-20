@@ -12,8 +12,8 @@ import StatsPanel from '@/components/StatsPanel';
 const Index = () => {
   const {
     formattedTime, progress, isRunning, sessionType,
-    sessionsCompleted, settings, stats,
-    start, pause, reset, skip, updateSettings, resetSettings, resetStats,
+    sessionsCompleted, settings, stats, canGoBack,
+    start, pause, reset, goBack, skip, updateSettings, resetSettings, resetStats,
   } = usePomodoro();
 
   const { resolvedTheme, setTheme } = useTheme();
@@ -72,9 +72,11 @@ const Index = () => {
 
           <TimerControls
             isRunning={isRunning}
+            canGoBack={canGoBack}
             onStart={start}
             onPause={pause}
             onReset={reset}
+            onBack={goBack}
             onSkip={skip}
           />
         </motion.main>

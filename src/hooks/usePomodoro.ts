@@ -14,6 +14,13 @@ import {
   type SessionType,
 } from '@/types/pomodoro';
 
+interface SessionSnapshot {
+  sessionType: SessionType;
+  timeLeft: number;
+  sessionsCompleted: number;
+  stats: PomodoroStats;
+}
+
 export { DEFAULT_SETTINGS } from '@/types/pomodoro';
 export type {
   PomodoroRuntime,
@@ -38,12 +45,22 @@ export function usePomodoro() {
   const previousSettingsRef = useRef(settings);
   const previousSessionTypeRef = useRef(sessionType);
   const hasRestoredRuntimeRef = useRef(false);
+  const previousSessionRef = useRef<SessionSnapshot | null>(null);
 
   const { playCountdownBeep, playCycleSound, primeCountdownAudio, resetCountdownState } = usePomodoroAudio();
   const { notifySessionComplete, requestPermission } = usePomodoroNotifications();
 
   const totalTime = getDurationForSession(sessionType, settings);
   const progress = 1 - timeLeft / totalTime;
+
+  const captureSessionSnapshot = useCallback(() => {
+    previousSessionRef.current = {
+      sessionType,
+      timeLeft,
+      sessionsCompleted,
+      stats,
+    };
+  }, [sessionType, sessionsCompleted, stats, timeLeft]);
 
   const getMotivationalMessage = useCallback(() => {
     return t.notifications.motivational[Math.floor(Math.random() * t.notifications.motivational.length)];
@@ -84,6 +101,7 @@ export function usePomodoro() {
   }, [hasHydratedRuntime, sessionType, timeLeft, isRunning, sessionsCompleted]);
 
   const applyTransition = useCallback((completedAt: Date) => {
+    captureSessionSnapshot();
     targetTimestampRef.current = null;
     resetCountdownState();
 
@@ -106,7 +124,7 @@ export function usePomodoro() {
 
     setIsRunning(settings.autoplayEnabled);
     return transitioned;
-  }, [resetCountdownState, sessionType, sessionsCompleted, setStats, settings, stats]);
+  }, [captureSessionSnapshot, resetCountdownState, sessionType, sessionsCompleted, setStats, settings, stats]);
 
   const completeSession = useCallback(() => {
     const transitioned = applyTransition(new Date());
@@ -157,6 +175,18 @@ export function usePomodoro() {
         stats,
         settings,
       );
+
+      if (
+        resolved.sessionType !== sessionType ||
+        resolved.sessionsCompleted !== sessionsCompleted
+      ) {
+        previousSessionRef.current = {
+          sessionType,
+          timeLeft,
+          sessionsCompleted,
+          stats,
+        };
+      }
 
       targetTimestampRef.current = resolved.targetTimestamp;
       setSessionType((prev) => (prev !== resolved.sessionType ? resolved.sessionType : prev));
@@ -250,6 +280,20 @@ export function usePomodoro() {
     completeSession();
   }, [completeSession, resetCountdownState]);
 
+  const goBack = useCallback(() => {
+    const previousSession = previousSessionRef.current;
+    if (!previousSession) return;
+
+    setIsRunning(false);
+    targetTimestampRef.current = null;
+    resetCountdownState();
+    setSessionType(previousSession.sessionType);
+    setTimeLeft(previousSession.timeLeft);
+    setSessionsCompleted(previousSession.sessionsCompleted);
+    setStats(previousSession.stats);
+    previousSessionRef.current = null;
+  }, [resetCountdownState, setStats]);
+
   const updateSettings = useCallback((newSettings: PomodoroSettings) => {
     setSettings(newSettings);
   }, [setSettings]);
@@ -259,14 +303,12 @@ export function usePomodoro() {
   }, [setSettings]);
 
   const resetStats = useCallback(() => {
-    setStats((prev) => ({
-      ...DEFAULT_STATS,
-      achievements: prev.achievements,
-    }));
+    setStats(DEFAULT_STATS);
     setSessionsCompleted(0);
     setIsRunning(false);
     targetTimestampRef.current = null;
     setSessionType('focus');
+    previousSessionRef.current = null;
     resetCountdownState();
     setTimeLeft(settings.focusMinutes * 60);
   }, [resetCountdownState, setStats, settings.focusMinutes]);
@@ -290,7 +332,9 @@ export function usePomodoro() {
     start,
     pause,
     reset,
+    goBack,
     skip,
+    canGoBack: previousSessionRef.current !== null,
     updateSettings,
     resetSettings,
     resetStats,

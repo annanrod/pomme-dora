@@ -1,22 +1,24 @@
-import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipBack, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/i18n';
 import { motion } from 'framer-motion';
 
 interface TimerControlsProps {
   isRunning: boolean;
+  canGoBack: boolean;
   onStart: () => void;
   onPause: () => void;
   onReset: () => void;
+  onBack: () => void;
   onSkip: () => void;
 }
 
-const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerControlsProps) => {
+const TimerControls = ({ isRunning, canGoBack, onStart, onPause, onReset, onBack, onSkip }: TimerControlsProps) => {
   const { t } = useI18n();
 
   return (
-    <div className="flex items-center justify-center gap-3">
-      <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}>
+    <div className="grid w-full max-w-sm grid-cols-5 items-center">
+      <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }} className="justify-self-center">
         <Button
           aria-label={t.controls.reset}
           variant="ghost"
@@ -28,7 +30,20 @@ const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerCo
         </Button>
       </motion.div>
 
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.93 }}>
+      <motion.div whileHover={canGoBack ? { scale: 1.08 } : undefined} whileTap={canGoBack ? { scale: 0.95 } : undefined} className="justify-self-center">
+        <Button
+          aria-label={t.controls.back}
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          disabled={!canGoBack}
+          className="h-10 w-10 rounded-full text-muted-foreground hover:bg-muted/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-35 sm:h-11 sm:w-11"
+        >
+          <SkipBack className="w-[18px] h-[18px]" />
+        </Button>
+      </motion.div>
+
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.93 }} className="justify-self-center">
         <Button
           aria-label={isRunning ? t.controls.pause : t.controls.start}
           onClick={isRunning ? onPause : onStart}
@@ -39,7 +54,7 @@ const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerCo
         </Button>
       </motion.div>
 
-      <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}>
+      <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }} className="justify-self-center">
         <Button
           aria-label={t.controls.skip}
           variant="ghost"
@@ -50,6 +65,8 @@ const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerCo
           <SkipForward className="w-[18px] h-[18px]" />
         </Button>
       </motion.div>
+
+      <div aria-hidden="true" />
     </div>
   );
 };
