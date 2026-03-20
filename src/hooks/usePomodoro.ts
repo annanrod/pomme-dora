@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n';
+import beepSound from '@/assets/beep.mp3';
 import notificationSound from '@/assets/notification.mp3';
 import { useLocalStorage } from './useLocalStorage';
 
@@ -83,7 +84,7 @@ export function usePomodoro() {
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const intervalRef = useRef<number | null>(null);
   const cycleAudioRef = useRef<HTMLAudioElement | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const beepAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastCountdownBeepRef = useRef<number | null>(null);
   const previousSettingsRef = useRef(settings);
   const previousSessionTypeRef = useRef(sessionType);
@@ -99,52 +100,22 @@ export function usePomodoro() {
   useEffect(() => {
     cycleAudioRef.current = new Audio(notificationSound);
     cycleAudioRef.current.preload = 'auto';
+    beepAudioRef.current = new Audio(beepSound);
+    beepAudioRef.current.preload = 'auto';
 
     return () => {
       cycleAudioRef.current = null;
-      if (audioContextRef.current) {
-        void audioContextRef.current.close().catch(() => {
-          // Ignore cleanup errors when the context is already closed.
-        });
-        audioContextRef.current = null;
-      }
+      beepAudioRef.current = null;
     };
   }, []);
 
   const playCountdownBeep = useCallback(() => {
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!beepAudioRef.current) return;
 
-    if (!AudioContextClass) return;
-
-    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      audioContextRef.current = new AudioContextClass();
-    }
-
-    const context = audioContextRef.current;
-
-    if (context.state === 'suspended') {
-      void context.resume().catch(() => {
-        // Ignore resume errors caused by browser playback restrictions.
-      });
-    }
-
-    const startAt = context.currentTime;
-    const oscillator = context.createOscillator();
-    const gainNode = context.createGain();
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, startAt);
-    oscillator.frequency.exponentialRampToValueAtTime(740, startAt + 0.18);
-
-    gainNode.gain.setValueAtTime(0.0001, startAt);
-    gainNode.gain.exponentialRampToValueAtTime(0.05, startAt + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.22);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(context.destination);
-
-    oscillator.start(startAt);
-    oscillator.stop(startAt + 0.24);
+    beepAudioRef.current.currentTime = 0;
+    void beepAudioRef.current.play().catch(() => {
+      // Browser autoplay restrictions can still block playback in some cases.
+    });
   }, []);
 
   const getMotivationalMessage = useCallback(() => {
@@ -281,8 +252,13 @@ export function usePomodoro() {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+
+    if (settings.soundEnabled && beepAudioRef.current) {
+      beepAudioRef.current.load();
+    }
+
     setIsRunning(true);
-  }, []);
+  }, [settings.soundEnabled]);
 
   const pause = useCallback(() => setIsRunning(false), []);
 

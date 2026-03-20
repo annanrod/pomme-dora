@@ -1,19 +1,17 @@
-import { Play, Pause, RotateCcw, SkipForward, Repeat } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/i18n';
 import { motion } from 'framer-motion';
 
 interface TimerControlsProps {
   isRunning: boolean;
-  autoplayEnabled: boolean;
   onStart: () => void;
   onPause: () => void;
   onReset: () => void;
   onSkip: () => void;
-  onToggleAutoplay: () => void;
 }
 
-const TimerControls = ({ isRunning, autoplayEnabled, onStart, onPause, onReset, onSkip, onToggleAutoplay }: TimerControlsProps) => {
+const TimerControls = ({ isRunning, onStart, onPause, onReset, onSkip }: TimerControlsProps) => {
   const { t } = useI18n();
 
   return (
@@ -27,18 +25,6 @@ const TimerControls = ({ isRunning, autoplayEnabled, onStart, onPause, onReset, 
           className="h-10 w-10 rounded-full text-muted-foreground hover:bg-muted/60 hover:text-foreground sm:h-11 sm:w-11"
         >
           <RotateCcw className="w-[18px] h-[18px]" />
-        </Button>
-      </motion.div>
-
-      <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}>
-        <Button
-          aria-label={autoplayEnabled ? t.controls.autoplayOff : t.controls.autoplayOn}
-          variant={autoplayEnabled ? "secondary" : "ghost"}
-          size="icon"
-          onClick={onToggleAutoplay}
-          className="h-10 w-10 rounded-full text-muted-foreground hover:bg-muted/60 hover:text-foreground data-[active=true]:text-foreground sm:h-11 sm:w-11"
-        >
-          <Repeat className="h-[18px] w-[18px]" />
         </Button>
       </motion.div>
 

@@ -76,6 +76,13 @@ const SettingsPanel = ({ settings, onUpdateSettings, onResetSettings, onResetSta
               onCheckedChange={(checked) => update('soundEnabled', checked)}
             />
           </div>
+          <div className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-3">
+            <Label className="font-body text-sm text-muted-foreground">{t.settings.autoplay}</Label>
+            <Switch
+              checked={settings.autoplayEnabled}
+              onCheckedChange={(checked) => update('autoplayEnabled', checked)}
+            />
+          </div>
 
           <div className="pt-4 border-t border-border">
             <Button

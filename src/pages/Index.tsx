@@ -71,12 +71,10 @@ const Index = () => {
 
           <TimerControls
             isRunning={isRunning}
-            autoplayEnabled={settings.autoplayEnabled}
             onStart={start}
             onPause={pause}
             onReset={reset}
             onSkip={skip}
-            onToggleAutoplay={() => updateSettings({ ...settings, autoplayEnabled: !settings.autoplayEnabled })}
           />
         </motion.main>
 
