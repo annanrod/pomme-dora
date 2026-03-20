@@ -29,8 +29,8 @@ const Index = () => {
   }, [t.motivational.length]);
 
   return (
-    <div className="h-[100svh] w-full overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,244,214,0.95)_0%,_rgba(252,242,223,0.88)_30%,_rgba(247,239,225,0.95)_60%,_rgba(244,235,220,1)_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(78,108,151,0.34)_0%,_rgba(35,52,83,0.92)_28%,_rgba(24,36,59,0.97)_62%,_rgba(17,25,41,1)_100%)]">
-      <div className="mx-auto grid h-full w-full max-w-6xl grid-rows-[auto_minmax(0,1fr)_auto_auto] px-4 pt-3 sm:px-6 sm:pt-4 lg:px-8">
+    <div className="min-h-[100svh] w-full overflow-y-auto overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(255,244,214,0.95)_0%,_rgba(252,242,223,0.88)_30%,_rgba(247,239,225,0.95)_60%,_rgba(244,235,220,1)_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(78,108,151,0.34)_0%,_rgba(35,52,83,0.92)_28%,_rgba(24,36,59,0.97)_62%,_rgba(17,25,41,1)_100%)]">
+      <div className="mx-auto grid min-h-[100svh] w-full max-w-6xl grid-rows-[auto_minmax(0,1fr)_auto_auto] px-4 pt-3 sm:px-6 sm:pt-4 lg:px-8">
         <header className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3">
           <div className="justify-self-start">
             <StatsPanel stats={stats} />
@@ -51,7 +51,7 @@ const Index = () => {
         </header>
 
         <motion.main
-          className="flex min-h-0 w-full flex-col items-center justify-evenly gap-2 overflow-hidden py-1 sm:gap-3 sm:py-2"
+          className="flex min-h-0 w-full flex-col items-center justify-evenly gap-2 py-1 sm:gap-3 sm:py-2"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
