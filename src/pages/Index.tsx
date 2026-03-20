@@ -29,44 +29,46 @@ const Index = () => {
   }, [t.motivational.length]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,244,214,0.95)_0%,_rgba(252,242,223,0.88)_30%,_rgba(247,239,225,0.95)_60%,_rgba(244,235,220,1)_100%)] px-4 py-6 dark:bg-[radial-gradient(circle_at_top,_rgba(78,108,151,0.34)_0%,_rgba(35,52,83,0.92)_28%,_rgba(24,36,59,0.97)_62%,_rgba(17,25,41,1)_100%)]">
-      {/* Header */}
-      <header className="w-full max-w-md flex items-center justify-between">
-        <StatsPanel stats={stats} />
-        <h1 className="font-display text-lg font-bold text-foreground tracking-wide">
-          {t.appName}
-        </h1>
-        <SettingsPanel
-          settings={settings}
-          onUpdateSettings={updateSettings}
-          onResetSettings={resetSettings}
-          onResetStats={resetStats}
-          darkMode={darkMode}
-          onToggleDarkMode={() => setTheme(darkMode ? 'light' : 'dark')}
-        />
-      </header>
+    <div className="min-h-dvh w-full overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,244,214,0.95)_0%,_rgba(252,242,223,0.88)_30%,_rgba(247,239,225,0.95)_60%,_rgba(244,235,220,1)_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(78,108,151,0.34)_0%,_rgba(35,52,83,0.92)_28%,_rgba(24,36,59,0.97)_62%,_rgba(17,25,41,1)_100%)]">
+      <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <header className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3">
+          <div className="justify-self-start">
+            <StatsPanel stats={stats} />
+          </div>
+          <h1 className="text-center font-display text-base font-bold tracking-wide text-foreground sm:text-lg md:text-xl">
+            {t.appName}
+          </h1>
+          <div className="justify-self-end">
+            <SettingsPanel
+              settings={settings}
+              onUpdateSettings={updateSettings}
+              onResetSettings={resetSettings}
+              onResetStats={resetStats}
+              darkMode={darkMode}
+              onToggleDarkMode={() => setTheme(darkMode ? 'light' : 'dark')}
+            />
+          </div>
+        </header>
 
-      {/* Main content */}
-      <motion.div
-        className="w-full max-w-md flex-1 flex flex-col items-center justify-center gap-2"
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <DoraSvgScene
-          sessionType={sessionType}
-          isRunning={isRunning}
-          progress={progress}
-        />
+        <motion.main
+          className="flex w-full flex-1 flex-col items-center justify-center gap-4 py-4 sm:gap-6 sm:py-6"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <DoraSvgScene
+            sessionType={sessionType}
+            isRunning={isRunning}
+            progress={progress}
+          />
 
-        <TimerDisplay
-          formattedTime={formattedTime}
-          progress={progress}
-          sessionType={sessionType}
-          sessionsCompleted={sessionsCompleted}
-        />
+          <TimerDisplay
+            formattedTime={formattedTime}
+            progress={progress}
+            sessionType={sessionType}
+            sessionsCompleted={sessionsCompleted}
+          />
 
-        <div className="mt-2">
           <TimerControls
             isRunning={isRunning}
             onStart={start}
@@ -74,24 +76,23 @@ const Index = () => {
             onReset={reset}
             onSkip={skip}
           />
-        </div>
-      </motion.div>
+        </motion.main>
 
-      {/* Footer message */}
-      <footer className="w-full max-w-md text-center pb-2">
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={messageIndex}
-            className="text-xs text-muted-foreground font-body font-medium"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.4 }}
-          >
-            {t.motivational[messageIndex]}
-          </motion.p>
-        </AnimatePresence>
-      </footer>
+        <footer className="flex min-h-10 w-full items-end justify-center pb-1 text-center sm:pb-2">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={messageIndex}
+              className="max-w-xl text-center font-body text-xs font-medium text-muted-foreground sm:text-sm"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.4 }}
+            >
+              {t.motivational[messageIndex]}
+            </motion.p>
+          </AnimatePresence>
+        </footer>
+      </div>
     </div>
   );
 };

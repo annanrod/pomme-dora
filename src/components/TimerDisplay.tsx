@@ -22,9 +22,9 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
   };
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex w-full flex-col items-center gap-4 sm:gap-5">
       <motion.div
-        className="text-sm font-semibold font-display tracking-wider uppercase"
+        className="px-2 text-center font-display text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm"
         key={sessionType}
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0, color: isBreak ? 'hsl(145, 30%, 42%)' : 'hsl(5, 55%, 55%)' }}
@@ -33,7 +33,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
         {sessionLabels[sessionType]}
       </motion.div>
 
-      <div className="relative w-48 h-48 flex items-center justify-center">
+      <div className="relative flex aspect-square w-[min(72vw,18rem)] items-center justify-center sm:w-[min(52vw,19rem)] md:w-[18rem]">
         <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 200 200">
           {/* Background track */}
           <circle
@@ -58,7 +58,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
           />
         </svg>
         <motion.div
-          className="text-4xl font-display font-bold text-foreground tabular-nums tracking-tight"
+          className="text-[clamp(2.25rem,9vw,3.25rem)] font-display font-bold tracking-tight text-foreground tabular-nums"
           key={formattedTime}
           initial={{ scale: 1.03 }}
           animate={{ scale: 1 }}
@@ -69,7 +69,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
       </div>
 
       {/* Session dots */}
-      <div className="flex gap-2 items-center">
+      <div className="flex flex-wrap items-center justify-center gap-2 px-3 text-center">
         {Array.from({ length: 4 }).map((_, i) => (
           <motion.div
             key={i}
@@ -83,7 +83,7 @@ const TimerDisplay = ({ formattedTime, progress, sessionType, sessionsCompleted 
             transition={{ duration: 0.3, delay: i * 0.05 }}
           />
         ))}
-        <span className="text-xs text-muted-foreground ml-1.5 font-body font-medium">
+        <span className="ml-1.5 text-xs font-body font-medium text-muted-foreground sm:text-sm">
           {sessionsCompleted} {t.timer.sessions}
         </span>
       </div>
