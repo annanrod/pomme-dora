@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useI18n } from '@/i18n';
-import type { SessionType } from '@/hooks/usePomodoro';
+import type { SessionType } from '@/types/pomodoro';
 
 interface TimerDisplayProps {
   formattedTime: string;

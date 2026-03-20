@@ -41,6 +41,7 @@ const Index = () => {
           <div className="justify-self-end">
             <SettingsPanel
               settings={settings}
+              isRunning={isRunning}
               onUpdateSettings={updateSettings}
               onResetSettings={resetSettings}
               onResetStats={resetStats}

@@ -5,10 +5,12 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useI18n } from '@/i18n';
-import type { PomodoroSettings } from '@/hooks/usePomodoro';
+import { cn } from '@/lib/utils';
+import type { PomodoroSettings } from '@/types/pomodoro';
 
 interface SettingsPanelProps {
   settings: PomodoroSettings;
+  isRunning: boolean;
   onUpdateSettings: (settings: PomodoroSettings) => void;
   onResetSettings: () => void;
   onResetStats: () => void;
@@ -16,10 +18,19 @@ interface SettingsPanelProps {
   onToggleDarkMode: () => void;
 }
 
-const SettingsPanel = ({ settings, onUpdateSettings, onResetSettings, onResetStats, darkMode, onToggleDarkMode }: SettingsPanelProps) => {
+const SettingsPanel = ({ settings, isRunning, onUpdateSettings, onResetSettings, onResetStats, darkMode, onToggleDarkMode }: SettingsPanelProps) => {
   const { t } = useI18n();
 
   const update = <K extends keyof PomodoroSettings>(key: K, value: PomodoroSettings[K]) => {
+    if (isRunning && (
+      key === 'focusMinutes' ||
+      key === 'shortBreakMinutes' ||
+      key === 'longBreakMinutes' ||
+      key === 'longBreakInterval'
+    )) {
+      return;
+    }
+
     const newSettings = { ...settings, [key]: value };
     onUpdateSettings(newSettings);
   };
@@ -36,36 +47,46 @@ const SettingsPanel = ({ settings, onUpdateSettings, onResetSettings, onResetSta
           <SheetTitle className="font-display text-foreground">{t.settings.title}</SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-6">
-          <div className="space-y-3">
+          {isRunning ? (
+            <div className="rounded-xl border border-border/70 bg-muted/35 px-3 py-3 text-sm font-body text-muted-foreground">
+              {t.settings.pauseToEdit}
+            </div>
+          ) : null}
+
+          <div className={cn("space-y-3", isRunning && "opacity-45")}>
             <Label className="font-body text-sm text-muted-foreground">{t.settings.focusDuration}: {settings.focusMinutes} {t.settings.minutes}</Label>
             <Slider
               value={[settings.focusMinutes]}
               onValueChange={([v]) => update('focusMinutes', v)}
+              disabled={isRunning}
               min={5} max={60} step={5}
               className="w-full"
             />
           </div>
-          <div className="space-y-3">
+          <div className={cn("space-y-3", isRunning && "opacity-45")}>
             <Label className="font-body text-sm text-muted-foreground">{t.settings.shortBreak}: {settings.shortBreakMinutes} {t.settings.minutes}</Label>
             <Slider
               value={[settings.shortBreakMinutes]}
               onValueChange={([v]) => update('shortBreakMinutes', v)}
+              disabled={isRunning}
               min={1} max={15} step={1}
             />
           </div>
-          <div className="space-y-3">
+          <div className={cn("space-y-3", isRunning && "opacity-45")}>
             <Label className="font-body text-sm text-muted-foreground">{t.settings.longBreak}: {settings.longBreakMinutes} {t.settings.minutes}</Label>
             <Slider
               value={[settings.longBreakMinutes]}
               onValueChange={([v]) => update('longBreakMinutes', v)}
+              disabled={isRunning}
               min={5} max={30} step={5}
             />
           </div>
-          <div className="space-y-3">
+          <div className={cn("space-y-3", isRunning && "opacity-45")}>
             <Label className="font-body text-sm text-muted-foreground">{t.settings.longBreakAfter}: {settings.longBreakInterval} {t.settings.sessions}</Label>
             <Slider
               value={[settings.longBreakInterval]}
               onValueChange={([v]) => update('longBreakInterval', v)}
+              disabled={isRunning}
               min={2} max={8} step={1}
             />
           </div>
@@ -74,6 +95,13 @@ const SettingsPanel = ({ settings, onUpdateSettings, onResetSettings, onResetSta
             <Switch
               checked={settings.soundEnabled}
               onCheckedChange={(checked) => update('soundEnabled', checked)}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-3">
+            <Label className="font-body text-sm text-muted-foreground">{t.settings.browserNotifications}</Label>
+            <Switch
+              checked={settings.notificationsEnabled}
+              onCheckedChange={(checked) => update('notificationsEnabled', checked)}
             />
           </div>
           <div className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-3">

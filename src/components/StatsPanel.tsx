@@ -2,7 +2,7 @@ import { Trophy, Flame, Clock, TreePine } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/i18n';
-import type { PomodoroStats } from '@/hooks/usePomodoro';
+import type { PomodoroStats } from '@/types/pomodoro';
 
 interface StatsPanelProps {
   stats: PomodoroStats;

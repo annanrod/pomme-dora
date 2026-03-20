@@ -1,205 +1,53 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n';
-import beepSound from '@/assets/beep.mp3';
-import notificationSound from '@/assets/notification.mp3';
+import { getDurationForSession, getNextSessionState, resolveRuntime } from '@/domain/pomodoro';
+import { readStoredRuntime, writeStoredRuntime } from '@/lib/pomodoroRuntimeStorage';
+import { usePomodoroAudio } from './usePomodoroAudio';
+import { usePomodoroNotifications } from './usePomodoroNotifications';
 import { useLocalStorage } from './useLocalStorage';
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_STATS,
+  type PomodoroRuntime,
+  type PomodoroSettings,
+  type PomodoroStats,
+  type SessionType,
+} from '@/types/pomodoro';
 
-export type SessionType = 'focus' | 'shortBreak' | 'longBreak';
-
-export interface PomodoroSettings {
-  focusMinutes: number;
-  shortBreakMinutes: number;
-  longBreakMinutes: number;
-  longBreakInterval: number;
-  soundEnabled: boolean;
-  autoplayEnabled: boolean;
-}
-
-export interface PomodoroStats {
-  totalSessions: number;
-  totalFocusMinutes: number;
-  currentStreak: number;
-  bestStreak: number;
-  lastSessionDate: string | null;
-  achievements: string[];
-}
-
-interface PomodoroRuntime {
-  sessionType: SessionType;
-  timeLeft: number;
-  isRunning: boolean;
-  sessionsCompleted: number;
-  targetTimestamp: number | null;
-}
-
-export const DEFAULT_SETTINGS: PomodoroSettings = {
-  focusMinutes: 25,
-  shortBreakMinutes: 5,
-  longBreakMinutes: 15,
-  longBreakInterval: 4,
-  soundEnabled: true,
-  autoplayEnabled: false,
-};
-
-const DEFAULT_STATS: PomodoroStats = {
-  totalSessions: 0,
-  totalFocusMinutes: 0,
-  currentStreak: 0,
-  bestStreak: 0,
-  lastSessionDate: null,
-  achievements: [],
-};
-
-const DAY_IN_MS = 86400000;
-const RUNTIME_STORAGE_KEY = 'pomme-runtime';
-
-function getTodayKey() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = `${now.getMonth() + 1}`.padStart(2, '0');
-  const day = `${now.getDate()}`.padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function parseStoredSessionDate(value: string) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return new Date(`${value}T00:00:00`);
-  }
-
-  const parsed = new Date(value);
-  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-}
-
-function getStreakFromLastSession(lastSessionDate: string | null, currentStreak: number, todayKey: string) {
-  if (!lastSessionDate) return 1;
-
-  const today = new Date(`${todayKey}T00:00:00`);
-  const lastSession = parseStoredSessionDate(lastSessionDate);
-  const diffInDays = Math.round((today.getTime() - lastSession.getTime()) / DAY_IN_MS);
-
-  if (diffInDays <= 0) return currentStreak;
-  if (diffInDays === 1) return currentStreak + 1;
-  return 1;
-}
-
-function getDurationForSession(sessionType: SessionType, settings: PomodoroSettings) {
-  if (sessionType === 'focus') return settings.focusMinutes * 60;
-  if (sessionType === 'shortBreak') return settings.shortBreakMinutes * 60;
-  return settings.longBreakMinutes * 60;
-}
-
-function readStoredRuntime() {
-  try {
-    const raw = localStorage.getItem(RUNTIME_STORAGE_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw) as Partial<PomodoroRuntime>;
-
-    if (
-      parsed.sessionType !== 'focus' &&
-      parsed.sessionType !== 'shortBreak' &&
-      parsed.sessionType !== 'longBreak'
-    ) {
-      return null;
-    }
-
-    if (
-      typeof parsed.timeLeft !== 'number' ||
-      typeof parsed.isRunning !== 'boolean' ||
-      typeof parsed.sessionsCompleted !== 'number'
-    ) {
-      return null;
-    }
-
-    return {
-      sessionType: parsed.sessionType,
-      timeLeft: Math.max(0, Math.floor(parsed.timeLeft)),
-      isRunning: parsed.isRunning,
-      sessionsCompleted: Math.max(0, Math.floor(parsed.sessionsCompleted)),
-      targetTimestamp: typeof parsed.targetTimestamp === 'number' ? parsed.targetTimestamp : null,
-    } satisfies PomodoroRuntime;
-  } catch {
-    return null;
-  }
-}
+export { DEFAULT_SETTINGS } from '@/types/pomodoro';
+export type {
+  PomodoroRuntime,
+  PomodoroSettings,
+  PomodoroStats,
+  SessionType,
+} from '@/types/pomodoro';
 
 export function usePomodoro() {
   const { t } = useI18n();
   const [settings, setSettings] = useLocalStorage<PomodoroSettings>('pomme-settings', DEFAULT_SETTINGS);
   const [stats, setStats] = useLocalStorage<PomodoroStats>('pomme-stats', DEFAULT_STATS);
-  
+
   const [sessionType, setSessionType] = useState<SessionType>('focus');
   const [timeLeft, setTimeLeft] = useState(settings.focusMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
+  const [hasHydratedRuntime, setHasHydratedRuntime] = useState(false);
+
   const intervalRef = useRef<number | null>(null);
-  const cycleAudioRef = useRef<HTMLAudioElement | null>(null);
-  const beepAudioRef = useRef<HTMLAudioElement | null>(null);
-  const lastCountdownBeepRef = useRef<number | null>(null);
   const targetTimestampRef = useRef<number | null>(null);
   const previousSettingsRef = useRef(settings);
   const previousSessionTypeRef = useRef(sessionType);
   const hasRestoredRuntimeRef = useRef(false);
 
-  const totalTime = sessionType === 'focus'
-    ? settings.focusMinutes * 60
-    : sessionType === 'shortBreak'
-    ? settings.shortBreakMinutes * 60
-    : settings.longBreakMinutes * 60;
+  const { playCountdownBeep, playCycleSound, primeCountdownAudio, resetCountdownState } = usePomodoroAudio();
+  const { notifySessionComplete, requestPermission } = usePomodoroNotifications();
 
+  const totalTime = getDurationForSession(sessionType, settings);
   const progress = 1 - timeLeft / totalTime;
-
-  useEffect(() => {
-    cycleAudioRef.current = new Audio(notificationSound);
-    cycleAudioRef.current.preload = 'auto';
-    beepAudioRef.current = new Audio(beepSound);
-    beepAudioRef.current.preload = 'auto';
-    beepAudioRef.current.volume = 0.35;
-
-    return () => {
-      cycleAudioRef.current = null;
-      beepAudioRef.current = null;
-    };
-  }, []);
-
-  const playCountdownBeep = useCallback(() => {
-    if (!beepAudioRef.current) return;
-
-    beepAudioRef.current.currentTime = 0;
-    void beepAudioRef.current.play().catch(() => {
-      // Browser autoplay restrictions can still block playback in some cases.
-    });
-  }, []);
 
   const getMotivationalMessage = useCallback(() => {
     return t.notifications.motivational[Math.floor(Math.random() * t.notifications.motivational.length)];
   }, [t.notifications.motivational]);
-
-  const checkAchievements = useCallback((newStats: PomodoroStats) => {
-    const achievements = [...newStats.achievements];
-    if (newStats.totalSessions >= 1 && !achievements.includes('first_session')) {
-      achievements.push('first_session');
-    }
-    if (newStats.totalSessions >= 10 && !achievements.includes('ten_sessions')) {
-      achievements.push('ten_sessions');
-    }
-    if (newStats.totalSessions >= 50 && !achievements.includes('fifty_sessions')) {
-      achievements.push('fifty_sessions');
-    }
-    if (newStats.currentStreak >= 3 && !achievements.includes('three_streak')) {
-      achievements.push('three_streak');
-    }
-    if (newStats.currentStreak >= 7 && !achievements.includes('week_streak')) {
-      achievements.push('week_streak');
-    }
-    if (newStats.totalFocusMinutes >= 60 && !achievements.includes('one_hour')) {
-      achievements.push('one_hour');
-    }
-    if (newStats.totalFocusMinutes >= 600 && !achievements.includes('ten_hours')) {
-      achievements.push('ten_hours');
-    }
-    return achievements;
-  }, []);
 
   useEffect(() => {
     if (hasRestoredRuntimeRef.current) return;
@@ -207,94 +55,90 @@ export function usePomodoro() {
     const storedRuntime = readStoredRuntime();
     hasRestoredRuntimeRef.current = true;
 
-    if (!storedRuntime) return;
+    if (storedRuntime) {
+      const resolved = resolveRuntime(storedRuntime, stats, settings);
 
-    const fallbackDuration = getDurationForSession(storedRuntime.sessionType, settings);
-    const nextTimeLeft = storedRuntime.isRunning && storedRuntime.targetTimestamp
-      ? Math.max(0, Math.ceil((storedRuntime.targetTimestamp - Date.now()) / 1000))
-      : Math.min(storedRuntime.timeLeft, fallbackDuration);
+      setSessionType(resolved.sessionType);
+      setSessionsCompleted(resolved.sessionsCompleted);
+      setTimeLeft(resolved.timeLeft);
+      targetTimestampRef.current = resolved.targetTimestamp;
+      setIsRunning(resolved.isRunning);
+      setStats(resolved.stats);
+    }
 
-    setSessionType(storedRuntime.sessionType);
-    setSessionsCompleted(storedRuntime.sessionsCompleted);
-    setTimeLeft(nextTimeLeft);
-    targetTimestampRef.current = storedRuntime.isRunning ? storedRuntime.targetTimestamp : null;
-    setIsRunning(Boolean(storedRuntime.isRunning && storedRuntime.targetTimestamp && nextTimeLeft > 0));
-  }, [settings]);
+    setHasHydratedRuntime(true);
+  }, [setStats, settings, stats]);
 
   useEffect(() => {
-    try {
-      const runtime: PomodoroRuntime = {
-        sessionType,
-        timeLeft,
-        isRunning,
-        sessionsCompleted,
-        targetTimestamp: targetTimestampRef.current,
-      };
-      localStorage.setItem(RUNTIME_STORAGE_KEY, JSON.stringify(runtime));
-    } catch {
-      // Ignore persistence failures.
+    if (!hasHydratedRuntime) return;
+
+    const runtime: PomodoroRuntime = {
+      sessionType,
+      timeLeft,
+      isRunning,
+      sessionsCompleted,
+      targetTimestamp: targetTimestampRef.current,
+    };
+
+    writeStoredRuntime(runtime);
+  }, [hasHydratedRuntime, sessionType, timeLeft, isRunning, sessionsCompleted]);
+
+  const applyTransition = useCallback((completedAt: Date) => {
+    targetTimestampRef.current = null;
+    resetCountdownState();
+
+    const transitioned = getNextSessionState(
+      sessionType,
+      sessionsCompleted,
+      stats,
+      settings,
+      completedAt,
+    );
+
+    setStats(transitioned.stats);
+    setSessionsCompleted(transitioned.sessionsCompleted);
+    setSessionType(transitioned.sessionType);
+    setTimeLeft(transitioned.timeLeft);
+
+    if (settings.autoplayEnabled) {
+      targetTimestampRef.current = Date.now() + transitioned.timeLeft * 1000;
     }
-  }, [sessionType, timeLeft, isRunning, sessionsCompleted]);
+
+    setIsRunning(settings.autoplayEnabled);
+    return transitioned;
+  }, [resetCountdownState, sessionType, sessionsCompleted, setStats, settings, stats]);
 
   const completeSession = useCallback(() => {
-    targetTimestampRef.current = null;
-    lastCountdownBeepRef.current = null;
+    const transitioned = applyTransition(new Date());
 
-    if (sessionType === 'focus') {
-      const todayKey = getTodayKey();
-      setStats(prev => {
-        const newStreak = getStreakFromLastSession(prev.lastSessionDate, prev.currentStreak, todayKey);
-        const newStats: PomodoroStats = {
-          ...prev,
-          totalSessions: prev.totalSessions + 1,
-          totalFocusMinutes: prev.totalFocusMinutes + settings.focusMinutes,
-          currentStreak: newStreak,
-          bestStreak: Math.max(prev.bestStreak, newStreak),
-          lastSessionDate: todayKey,
-          achievements: prev.achievements,
-        };
-        newStats.achievements = checkAchievements(newStats);
-        return newStats;
-      });
-
-      const newCompleted = sessionsCompleted + 1;
-      setSessionsCompleted(newCompleted);
-
-      const nextSessionType: SessionType = newCompleted % settings.longBreakInterval === 0 ? 'longBreak' : 'shortBreak';
-      const nextTimeLeft = getDurationForSession(nextSessionType, settings);
-
-      setSessionType(nextSessionType);
-      setTimeLeft(nextTimeLeft);
-
-      if (settings.autoplayEnabled) {
-        targetTimestampRef.current = Date.now() + nextTimeLeft * 1000;
-      }
-
-    } else {
-      const nextTimeLeft = settings.focusMinutes * 60;
-      setSessionType('focus');
-      setTimeLeft(nextTimeLeft);
-
-      if (settings.autoplayEnabled) {
-        targetTimestampRef.current = Date.now() + nextTimeLeft * 1000;
-      }
-    }
-    setIsRunning(settings.autoplayEnabled);
-    lastCountdownBeepRef.current = null;
-
-    if (settings.soundEnabled && cycleAudioRef.current) {
-      cycleAudioRef.current.currentTime = 0;
-      void cycleAudioRef.current.play().catch(() => {
-        // Browser autoplay restrictions can block playback until the user interacts.
-      });
+    if (settings.soundEnabled) {
+      playCycleSound();
     }
 
-    if ('Notification' in window && Notification.permission === 'granted') {
-      const title = sessionType === 'focus' ? t.notifications.focusCompleteTitle : t.notifications.breakCompleteTitle;
-      const body = sessionType === 'focus' ? t.notifications.focusCompleteBody : t.notifications.breakCompleteBody;
-      new Notification(title, { body: `${body}\n${getMotivationalMessage()}` });
-    }
-  }, [checkAchievements, getMotivationalMessage, sessionType, sessionsCompleted, setStats, settings, t.notifications.breakCompleteBody, t.notifications.breakCompleteTitle, t.notifications.focusCompleteBody, t.notifications.focusCompleteTitle]);
+    notifySessionComplete({
+      enabled: settings.notificationsEnabled,
+      sessionType,
+      focusCompleteTitle: t.notifications.focusCompleteTitle,
+      focusCompleteBody: t.notifications.focusCompleteBody,
+      breakCompleteTitle: t.notifications.breakCompleteTitle,
+      breakCompleteBody: t.notifications.breakCompleteBody,
+      motivationalBody: getMotivationalMessage(),
+    });
+
+    return transitioned;
+  }, [
+    applyTransition,
+    getMotivationalMessage,
+    notifySessionComplete,
+    playCycleSound,
+    sessionType,
+    settings.notificationsEnabled,
+    settings.soundEnabled,
+    t.notifications.breakCompleteBody,
+    t.notifications.breakCompleteTitle,
+    t.notifications.focusCompleteBody,
+    t.notifications.focusCompleteTitle,
+  ]);
 
   useEffect(() => {
     if (!isRunning || !targetTimestampRef.current) return;
@@ -302,13 +146,24 @@ export function usePomodoro() {
     const syncRemainingTime = () => {
       if (!targetTimestampRef.current) return;
 
-      const remaining = Math.max(0, Math.ceil((targetTimestampRef.current - Date.now()) / 1000));
+      const resolved = resolveRuntime(
+        {
+          sessionType,
+          timeLeft,
+          isRunning: true,
+          sessionsCompleted,
+          targetTimestamp: targetTimestampRef.current,
+        },
+        stats,
+        settings,
+      );
 
-      setTimeLeft(prev => (prev !== remaining ? remaining : prev));
-
-      if (remaining <= 0) {
-        completeSession();
-      }
+      targetTimestampRef.current = resolved.targetTimestamp;
+      setSessionType((prev) => (prev !== resolved.sessionType ? resolved.sessionType : prev));
+      setSessionsCompleted((prev) => (prev !== resolved.sessionsCompleted ? resolved.sessionsCompleted : prev));
+      setStats((prev) => (prev !== resolved.stats ? resolved.stats : prev));
+      setTimeLeft((prev) => (prev !== resolved.timeLeft ? resolved.timeLeft : prev));
+      setIsRunning(resolved.isRunning);
     };
 
     syncRemainingTime();
@@ -328,27 +183,18 @@ export function usePomodoro() {
       window.removeEventListener('focus', syncRemainingTime);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [completeSession, isRunning]);
-
-  useEffect(() => {
-    if (isRunning && timeLeft <= 0) {
-      completeSession();
-    }
-  }, [completeSession, isRunning, timeLeft]);
+  }, [isRunning, sessionType, sessionsCompleted, setStats, settings, stats, timeLeft]);
 
   useEffect(() => {
     if (!isRunning || !settings.soundEnabled || timeLeft > 3 || timeLeft <= 0) {
       if (timeLeft > 3 || !isRunning) {
-        lastCountdownBeepRef.current = null;
+        resetCountdownState();
       }
       return;
     }
 
-    if (lastCountdownBeepRef.current === timeLeft) return;
-
-    lastCountdownBeepRef.current = timeLeft;
-    playCountdownBeep();
-  }, [isRunning, playCountdownBeep, settings.soundEnabled, timeLeft]);
+    playCountdownBeep(timeLeft);
+  }, [isRunning, playCountdownBeep, resetCountdownState, settings.soundEnabled, timeLeft]);
 
   useEffect(() => {
     const settingsChanged =
@@ -357,6 +203,7 @@ export function usePomodoro() {
       previousSettingsRef.current.longBreakMinutes !== settings.longBreakMinutes ||
       previousSettingsRef.current.longBreakInterval !== settings.longBreakInterval ||
       previousSettingsRef.current.soundEnabled !== settings.soundEnabled ||
+      previousSettingsRef.current.notificationsEnabled !== settings.notificationsEnabled ||
       previousSettingsRef.current.autoplayEnabled !== settings.autoplayEnabled;
     const sessionTypeChanged = previousSessionTypeRef.current !== sessionType;
 
@@ -369,17 +216,15 @@ export function usePomodoro() {
   }, [isRunning, sessionType, settings]);
 
   const start = useCallback(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    requestPermission(settings.notificationsEnabled);
 
-    if (settings.soundEnabled && beepAudioRef.current) {
-      beepAudioRef.current.load();
+    if (settings.soundEnabled) {
+      primeCountdownAudio();
     }
 
     targetTimestampRef.current = Date.now() + timeLeft * 1000;
     setIsRunning(true);
-  }, [settings.soundEnabled, timeLeft]);
+  }, [primeCountdownAudio, requestPermission, settings.notificationsEnabled, settings.soundEnabled, timeLeft]);
 
   const pause = useCallback(() => {
     if (targetTimestampRef.current) {
@@ -394,16 +239,16 @@ export function usePomodoro() {
   const reset = useCallback(() => {
     setIsRunning(false);
     targetTimestampRef.current = null;
-    lastCountdownBeepRef.current = null;
+    resetCountdownState();
     setTimeLeft(getDurationForSession(sessionType, settings));
-  }, [sessionType, settings]);
+  }, [resetCountdownState, sessionType, settings]);
 
   const skip = useCallback(() => {
     setIsRunning(false);
     targetTimestampRef.current = null;
-    lastCountdownBeepRef.current = null;
+    resetCountdownState();
     completeSession();
-  }, [completeSession]);
+  }, [completeSession, resetCountdownState]);
 
   const updateSettings = useCallback((newSettings: PomodoroSettings) => {
     setSettings(newSettings);
@@ -414,7 +259,7 @@ export function usePomodoro() {
   }, [setSettings]);
 
   const resetStats = useCallback(() => {
-    setStats(prev => ({
+    setStats((prev) => ({
       ...DEFAULT_STATS,
       achievements: prev.achievements,
     }));
@@ -422,9 +267,9 @@ export function usePomodoro() {
     setIsRunning(false);
     targetTimestampRef.current = null;
     setSessionType('focus');
-    lastCountdownBeepRef.current = null;
+    resetCountdownState();
     setTimeLeft(settings.focusMinutes * 60);
-  }, [setStats, settings.focusMinutes]);
+  }, [resetCountdownState, setStats, settings.focusMinutes]);
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60);

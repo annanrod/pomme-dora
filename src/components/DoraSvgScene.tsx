@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { useI18n } from '@/i18n';
-import type { SessionType } from '@/hooks/usePomodoro';
+import type { SessionType } from '@/types/pomodoro';
 import doraFocus from '@/assets/dora-focus.png';
 import doraFocusDarkmode from '@/assets/dora-focus-darkmode.png';
 import doraBreak from '@/assets/dora-break.png';
