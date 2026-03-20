@@ -17,7 +17,7 @@ const TimerControls = ({ isRunning, canGoBack, onStart, onPause, onReset, onBack
   const { t } = useI18n();
 
   return (
-    <div className="grid w-full max-w-sm grid-cols-5 items-center">
+    <div className="grid w-full max-w-[18rem] grid-cols-[auto_auto_auto_auto] items-center justify-center gap-x-4 sm:max-w-[19rem] sm:gap-x-5">
       <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }} className="justify-self-center">
         <Button
           aria-label={t.controls.reset}
@@ -66,7 +66,6 @@ const TimerControls = ({ isRunning, canGoBack, onStart, onPause, onReset, onBack
         </Button>
       </motion.div>
 
-      <div aria-hidden="true" />
     </div>
   );
 };
